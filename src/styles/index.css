@@ -1,0 +1,405 @@
+/* ==========================================================================
+   WaffleMatrix PDF Viewer — Design System
+   Core tokens, reset, typography, theme, glassmorphism, scrollbar, motion.
+   ========================================================================== */
+
+/* ---------- oklch interpolation fallback ---------- */
+:root {
+  --in-oklab: ;
+  --in-oklch: ;
+}
+
+@supports (background: linear-gradient(in oklch, white, black)) {
+  :root {
+    --in-oklab: in oklab;
+    --in-oklch: in oklch;
+  }
+}
+
+/* ---------- Raw color palette ---------- */
+:root {
+  /* Dark palette */
+  --color-bg-primary-dark: #0f1419;
+  --color-bg-secondary-dark: #1a1f2e;
+  --color-bg-tertiary-dark: #232a3b;
+  --color-bg-elevated-dark: #1e2536;
+  --color-surface-dark: rgba(26, 31, 46, 0.85);
+  --color-text-primary-dark: #e8eaed;
+  --color-text-secondary-dark: #9aa0a6;
+  --color-text-muted-dark: #5f6368;
+  --color-border-dark: rgba(255, 255, 255, 0.08);
+  --color-border-hover-dark: rgba(255, 255, 255, 0.16);
+  --color-divider-dark: rgba(255, 255, 255, 0.06);
+
+  /* Light palette */
+  --color-bg-primary-light: #ffffff;
+  --color-bg-secondary-light: #f8fafc;
+  --color-bg-tertiary-light: #f1f5f9;
+  --color-bg-elevated-light: #ffffff;
+  --color-surface-light: rgba(255, 255, 255, 0.85);
+  --color-text-primary-light: #0f172a;
+  --color-text-secondary-light: #475569;
+  --color-text-muted-light: #94a3b8;
+  --color-border-light: rgba(0, 0, 0, 0.08);
+  --color-border-hover-light: rgba(0, 0, 0, 0.16);
+  --color-divider-light: rgba(0, 0, 0, 0.06);
+
+  /* Accent */
+  --color-accent-light: #2563eb;
+  --color-accent-dark: #3b82f6;
+  --color-accent-hover-light: #1d4ed8;
+  --color-accent-hover-dark: #60a5fa;
+  --color-accent-subtle-light: rgba(37, 99, 235, 0.1);
+  --color-accent-subtle-dark: rgba(59, 130, 246, 0.15);
+
+  /* Purple */
+  --color-purple-light: #7c3aed;
+  --color-purple-dark: #8b5cf6;
+
+  /* Danger */
+  --color-danger-light: #dc2626;
+  --color-danger-dark: #ef4444;
+
+  /* Success */
+  --color-success-light: #16a34a;
+  --color-success-dark: #22c55e;
+
+  /* Warning */
+  --color-warning-light: #d97706;
+  --color-warning-dark: #f59e0b;
+}
+
+/* ---------- Theme tokens via light-dark() ---------- */
+:root {
+  color-scheme: dark light;
+
+  --bg-primary: var(--color-bg-primary-dark);
+  --bg-secondary: var(--color-bg-secondary-dark);
+  --bg-tertiary: var(--color-bg-tertiary-dark);
+  --bg-elevated: var(--color-bg-elevated-dark);
+  --surface: var(--color-surface-dark);
+  --text-primary: var(--color-text-primary-dark);
+  --text-secondary: var(--color-text-secondary-dark);
+  --text-muted: var(--color-text-muted-dark);
+  --border: var(--color-border-dark);
+  --border-hover: var(--color-border-hover-dark);
+  --divider: var(--color-divider-dark);
+  --accent: var(--color-accent-dark);
+  --accent-hover: var(--color-accent-hover-dark);
+  --accent-subtle: var(--color-accent-subtle-dark);
+  --purple: var(--color-purple-dark);
+  --danger: var(--color-danger-dark);
+  --success: var(--color-success-dark);
+  --warning: var(--color-warning-dark);
+
+  @media (prefers-color-scheme: light) {
+    --bg-primary: var(--color-bg-primary-light);
+    --bg-secondary: var(--color-bg-secondary-light);
+    --bg-tertiary: var(--color-bg-tertiary-light);
+    --bg-elevated: var(--color-bg-elevated-light);
+    --surface: var(--color-surface-light);
+    --text-primary: var(--color-text-primary-light);
+    --text-secondary: var(--color-text-secondary-light);
+    --text-muted: var(--color-text-muted-light);
+    --border: var(--color-border-light);
+    --border-hover: var(--color-border-hover-light);
+    --divider: var(--color-divider-light);
+    --accent: var(--color-accent-light);
+    --accent-hover: var(--color-accent-hover-light);
+    --accent-subtle: var(--color-accent-subtle-light);
+    --purple: var(--color-purple-light);
+    --danger: var(--color-danger-light);
+    --success: var(--color-success-light);
+    --warning: var(--color-warning-light);
+  }
+
+  /* light-dark() overrides for browsers that support it */
+  @supports (color: light-dark(white, black)) {
+    --bg-primary: light-dark(var(--color-bg-primary-light), var(--color-bg-primary-dark));
+    --bg-secondary: light-dark(var(--color-bg-secondary-light), var(--color-bg-secondary-dark));
+    --bg-tertiary: light-dark(var(--color-bg-tertiary-light), var(--color-bg-tertiary-dark));
+    --bg-elevated: light-dark(var(--color-bg-elevated-light), var(--color-bg-elevated-dark));
+    --surface: light-dark(var(--color-surface-light), var(--color-surface-dark));
+    --text-primary: light-dark(var(--color-text-primary-light), var(--color-text-primary-dark));
+    --text-secondary: light-dark(var(--color-text-secondary-light), var(--color-text-secondary-dark));
+    --text-muted: light-dark(var(--color-text-muted-light), var(--color-text-muted-dark));
+    --border: light-dark(var(--color-border-light), var(--color-border-dark));
+    --border-hover: light-dark(var(--color-border-hover-light), var(--color-border-hover-dark));
+    --divider: light-dark(var(--color-divider-light), var(--color-divider-dark));
+    --accent: light-dark(var(--color-accent-light), var(--color-accent-dark));
+    --accent-hover: light-dark(var(--color-accent-hover-light), var(--color-accent-hover-dark));
+    --accent-subtle: light-dark(var(--color-accent-subtle-light), var(--color-accent-subtle-dark));
+    --purple: light-dark(var(--color-purple-light), var(--color-purple-dark));
+    --danger: light-dark(var(--color-danger-light), var(--color-danger-dark));
+    --success: light-dark(var(--color-success-light), var(--color-success-dark));
+    --warning: light-dark(var(--color-warning-light), var(--color-warning-dark));
+  }
+}
+
+/* ---------- Manual theme class overrides (from toggle) ---------- */
+html.theme-dark {
+  color-scheme: dark;
+}
+
+html.theme-light {
+  color-scheme: light;
+}
+
+html.theme-dark {
+  --bg-primary: var(--color-bg-primary-dark);
+  --bg-secondary: var(--color-bg-secondary-dark);
+  --bg-tertiary: var(--color-bg-tertiary-dark);
+  --bg-elevated: var(--color-bg-elevated-dark);
+  --surface: var(--color-surface-dark);
+  --text-primary: var(--color-text-primary-dark);
+  --text-secondary: var(--color-text-secondary-dark);
+  --text-muted: var(--color-text-muted-dark);
+  --border: var(--color-border-dark);
+  --border-hover: var(--color-border-hover-dark);
+  --divider: var(--color-divider-dark);
+  --accent: var(--color-accent-dark);
+  --accent-hover: var(--color-accent-hover-dark);
+  --accent-subtle: var(--color-accent-subtle-dark);
+  --purple: var(--color-purple-dark);
+  --danger: var(--color-danger-dark);
+  --success: var(--color-success-dark);
+  --warning: var(--color-warning-dark);
+}
+
+html.theme-light {
+  --bg-primary: var(--color-bg-primary-light);
+  --bg-secondary: var(--color-bg-secondary-light);
+  --bg-tertiary: var(--color-bg-tertiary-light);
+  --bg-elevated: var(--color-bg-elevated-light);
+  --surface: var(--color-surface-light);
+  --text-primary: var(--color-text-primary-light);
+  --text-secondary: var(--color-text-secondary-light);
+  --text-muted: var(--color-text-muted-light);
+  --border: var(--color-border-light);
+  --border-hover: var(--color-border-hover-light);
+  --divider: var(--color-divider-light);
+  --accent: var(--color-accent-light);
+  --accent-hover: var(--color-accent-hover-light);
+  --accent-subtle: var(--color-accent-subtle-light);
+  --purple: var(--color-purple-light);
+  --danger: var(--color-danger-light);
+  --success: var(--color-success-light);
+  --warning: var(--color-warning-light);
+}
+
+/* ---------- Glassmorphism ---------- */
+:root {
+  --glass-bg: var(--surface);
+  --glass-blur: 16px;
+  --glass-border: 1px solid var(--border);
+  --glass-shadow-dark: 0 4px 24px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2);
+  --glass-shadow-light: 0 4px 24px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.04);
+  --glass-shadow: var(--glass-shadow-dark);
+
+  @media (prefers-color-scheme: light) {
+    --glass-shadow: var(--glass-shadow-light);
+  }
+}
+
+html.theme-dark {
+  --glass-shadow: var(--glass-shadow-dark);
+}
+
+html.theme-light {
+  --glass-shadow: var(--glass-shadow-light);
+}
+
+/* ---------- Typography ---------- */
+:root {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+
+  --text-xs: 0.6875rem;  /* 11px */
+  --text-sm: 0.75rem;    /* 12px */
+  --text-base: 0.8125rem;/* 13px */
+  --text-md: 0.875rem;   /* 14px */
+  --text-lg: 1rem;       /* 16px */
+  --text-xl: 1.25rem;    /* 20px */
+
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+}
+
+/* ---------- Spacing ---------- */
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+}
+
+/* ---------- Layout ---------- */
+:root {
+  --toolbar-height: 48px;
+  --sidebar-width: 260px;
+  --statusbar-height: 24px;
+}
+
+/* ---------- Transitions ---------- */
+:root {
+  --duration-fast: 120ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ---------- Scrollbar ---------- */
+:root {
+  --scrollbar-thumb-dark: rgba(255, 255, 255, 0.2);
+  --scrollbar-track-dark: transparent;
+  --scrollbar-thumb-light: rgba(0, 0, 0, 0.2);
+  --scrollbar-track-light: transparent;
+
+  --scrollbar-thumb: var(--scrollbar-thumb-dark);
+  --scrollbar-track: var(--scrollbar-track-dark);
+
+  @media (prefers-color-scheme: light) {
+    --scrollbar-thumb: var(--scrollbar-thumb-light);
+    --scrollbar-track: var(--scrollbar-track-light);
+  }
+}
+
+html.theme-dark {
+  --scrollbar-thumb: var(--scrollbar-thumb-dark);
+  --scrollbar-track: var(--scrollbar-track-dark);
+}
+
+html.theme-light {
+  --scrollbar-thumb: var(--scrollbar-thumb-light);
+  --scrollbar-track: var(--scrollbar-track-light);
+}
+
+* {
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  scrollbar-width: thin;
+}
+
+/* ---------- Reset ---------- */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
+  accent-color: var(--accent);
+}
+
+body {
+  min-height: 100vh;
+  overflow: hidden;
+  font-size: var(--text-base);
+  font-weight: var(--weight-normal);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+  outline: none;
+}
+
+input {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  outline: none;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+img, svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* ---------- Utility: Glassmorphism panel ---------- */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+/* ---------- Utility: Focus ring ---------- */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------- Utility: Visually hidden ---------- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ---------- Utility: Hidden Attribute Reset ---------- */
+[hidden] {
+  display: none !important;
+}
+
+/* ---------- Selection ---------- */
+::selection {
+  background: var(--accent-subtle);
+  color: var(--text-primary);
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

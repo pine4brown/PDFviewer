@@ -1,0 +1,207 @@
+/* ==========================================================================
+   WaffleMatrix PDF Viewer — Toolbar
+   Fixed top toolbar with glassmorphism, flex layout, controls.
+   ========================================================================== */
+
+.toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  height: var(--toolbar-height);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0 var(--space-2);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-bottom: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ---------- Toolbar sections ---------- */
+.toolbar__left,
+.toolbar__center,
+.toolbar__right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.toolbar__left {
+  flex-shrink: 0;
+}
+
+.toolbar__center {
+  flex: 1;
+  justify-content: center;
+}
+
+.toolbar__right {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* ---------- Toolbar divider ---------- */
+.toolbar__divider {
+  width: 1px;
+  height: 20px;
+  background: var(--divider);
+  margin: 0 var(--space-1);
+  flex-shrink: 0;
+}
+
+/* ---------- Toolbar button ---------- */
+.toolbar-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  transition: background-color var(--duration-fast) var(--ease-in-out),
+              color var(--duration-fast) var(--ease-in-out),
+              transform var(--duration-fast) var(--ease-out);
+  flex-shrink: 0;
+}
+
+.toolbar-btn:hover {
+  background: var(--accent-subtle);
+  color: var(--text-primary);
+}
+
+.toolbar-btn:active {
+  transform: scale(0.92);
+}
+
+.toolbar-btn.is-active {
+  background: var(--accent-subtle);
+  color: var(--accent);
+}
+
+.toolbar-btn:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.toolbar-btn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* ---------- Toolbar text button ---------- */
+.toolbar-btn--text {
+  width: auto;
+  padding: 0 var(--space-2);
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+
+/* ---------- Page navigation ---------- */
+.toolbar__page-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.toolbar__page-input {
+  width: 40px;
+  height: 28px;
+  padding: 0 var(--space-1);
+  text-align: center;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--duration-fast) var(--ease-in-out),
+              box-shadow var(--duration-fast) var(--ease-in-out);
+}
+
+.toolbar__page-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-subtle);
+}
+
+.toolbar__page-total {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ---------- Zoom controls ---------- */
+.toolbar__zoom {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.toolbar__zoom-level {
+  min-width: 42px;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* ---------- Search bar (inline in toolbar) ---------- */
+.toolbar__search-toggle.is-active {
+  color: var(--accent);
+  background: var(--accent-subtle);
+}
+
+/* ---------- Theme & Language toggles ---------- */
+.toolbar-btn--theme,
+.toolbar-btn--lang {
+  font-size: var(--text-md);
+}
+
+.toolbar-btn--lang {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  width: auto;
+  padding: 0 var(--space-2);
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+/* ---------- Tooltip (optional) ---------- */
+.toolbar-btn[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) scale(0.95);
+  padding: 4px 8px;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border: var(--glass-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--glass-shadow);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-in-out),
+              transform var(--duration-fast) var(--ease-in-out);
+  z-index: 200;
+}
+
+.toolbar-btn[data-tooltip]:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}

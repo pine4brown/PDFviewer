@@ -48,7 +48,7 @@ export async function closePdf() {
  * @returns {Promise<{page_index: number, zoom: number, image_data: string} | null>}
  */
 export async function renderPage(pageIndex, zoom) {
-  return invoke('render_page', { page_index: pageIndex, zoom });
+  return invoke('render_page', { pageIndex, zoom });
 }
 
 /**
@@ -57,7 +57,7 @@ export async function renderPage(pageIndex, zoom) {
  * @returns {Promise<{page_index: number, width: number, height: number} | null>}
  */
 export async function getPageInfo(pageIndex) {
-  return invoke('get_page_info', { page_index: pageIndex });
+  return invoke('get_page_info', { pageIndex });
 }
 
 /**
@@ -69,9 +69,9 @@ export async function getPageInfo(pageIndex) {
  */
 export async function getThumbnails(startPage, endPage, maxWidth = 200) {
   return invoke('get_thumbnails', {
-    start_page: startPage,
-    end_page: endPage,
-    max_width: maxWidth,
+    startPage,
+    endPage,
+    maxWidth,
   });
 }
 
@@ -94,24 +94,12 @@ export async function searchText(query) {
 
 /**
  * Open a native file dialog and return the selected file path.
- * Uses Tauri's dialog plugin via window.__TAURI__.dialog.
+ * Uses the Rust backend to avoid issues with missing global Tauri plugins.
  * @returns {Promise<string|null>}
  */
 export async function openFileDialog() {
   try {
-    const dialogPlugin = window.__TAURI__?.dialog;
-    if (!dialogPlugin) {
-      console.warn('[WaffleMatrix] Tauri dialog plugin not available');
-      return null;
-    }
-    const selected = await dialogPlugin.open({
-      multiple: false,
-      filters: [{
-        name: 'PDF Documents',
-        extensions: ['pdf'],
-      }],
-    });
-    return selected || null;
+    return await invoke('open_file_dialog');
   } catch (err) {
     console.error('[WaffleMatrix] File dialog error:', err);
     return null;

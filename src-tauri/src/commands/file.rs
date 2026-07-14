@@ -4,6 +4,7 @@ use std::io::Read;
 use pdfium_render::prelude::*;
 use serde::{Deserialize, Serialize};
 use tauri::State;
+use tauri_plugin_dialog::DialogExt;
 
 use crate::pdf::engine::{bind_pdfium, DocumentInfo, DocumentState};
 use crate::state::AppState;
@@ -78,6 +79,18 @@ pub fn close_pdf(state: State<'_, AppState>) -> Result<(), String> {
     *state.current_bytes.lock() = None;
     state.cache.lock().invalidate_all();
     Ok(())
+}
+
+/// Open a native file dialog to select a PDF file.
+#[tauri::command]
+pub async fn open_file_dialog(app: tauri::AppHandle) -> Result<Option<String>, String> {
+    let file_path = app
+        .dialog()
+        .file()
+        .add_filter("PDF Documents", &["pdf"])
+        .blocking_pick_file();
+        
+    Ok(file_path.map(|p| p.to_string()))
 }
 
 // ---- helpers ----------------------------------------------------------------

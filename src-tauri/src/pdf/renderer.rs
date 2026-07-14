@@ -48,6 +48,7 @@ pub fn render_page(
     let config = PdfRenderConfig::new()
         .set_target_width(w)
         .set_maximum_height(h)
+        .set_clear_color(PdfColor::SOLID_WHITE)
         .render_form_data(true)
         .render_annotations(true);
 
@@ -72,6 +73,7 @@ pub fn render_thumbnail(
 
     let config = PdfRenderConfig::new()
         .set_target_width(max_w)
+        .set_clear_color(PdfColor::SOLID_WHITE)
         .render_form_data(false)
         .render_annotations(false);
 

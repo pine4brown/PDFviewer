@@ -382,6 +382,11 @@ img, svg {
   border-width: 0;
 }
 
+/* ---------- Utility: Hidden Attribute Reset ---------- */
+[hidden] {
+  display: none !important;
+}
+
 /* ---------- Selection ---------- */
 ::selection {
   background: var(--accent-subtle);

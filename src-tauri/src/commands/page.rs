@@ -3,6 +3,7 @@
 use pdfium_render::prelude::*;
 use serde::{Deserialize, Serialize};
 use tauri::State;
+use base64::Engine;
 
 use crate::pdf::engine::{bind_pdfium, OutlineItem};
 use crate::pdf::renderer;
@@ -62,6 +63,12 @@ pub fn render_page(
         .map_err(|e| format!("Failed to open PDF for render: {e}"))?;
 
     let image_data = renderer::render_page(&document, page_index, zoom)?;
+    
+    // DEBUG: Write the base64 string to a file to verify what the backend is generating
+    if let Ok(bytes) = base64::prelude::BASE64_STANDARD.decode(&image_data) {
+        let _ = std::fs::write("/tmp/wafflematrix_debug.png", bytes);
+    }
+    
     state.cache.lock().put(page_index, zoom, image_data.clone());
 
     Ok(RenderPageResponse { page_index, zoom, image_data })

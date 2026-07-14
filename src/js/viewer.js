@@ -71,6 +71,7 @@ export class PdfViewer {
       console.error('[Viewer] Error opening PDF:', err);
       this.showWelcome();
       this._emit('pdf:error', { error: err.message });
+      alert(`Failed to open PDF: ${err.message}`);
     } finally {
       this.showLoading(false);
     }
@@ -166,17 +167,26 @@ export class PdfViewer {
     if (!this.filePath || this.totalPages === 0) return;
 
     try {
+      console.log(`[Viewer] Requesting render for page ${this.currentPage - 1} at zoom ${this.zoom}`);
       // Backend expects 0-based page index
       const result = await renderPage(this.currentPage - 1, this.zoom);
-      if (!result) return;
+      if (!result) {
+        console.error('[Viewer] renderPage returned null/undefined');
+        return;
+      }
+      console.log(`[Viewer] Received render result. Image data length: ${result.image_data?.length}`);
 
       this._clearCanvases();
 
       const canvas = document.querySelector('#pdf-canvas');
-      if (!canvas) return;
+      if (!canvas) {
+        console.error('[Viewer] #pdf-canvas not found in DOM');
+        return;
+      }
 
       const img = new Image();
       img.onload = () => {
+        console.log(`[Viewer] Image loaded successfully: ${img.naturalWidth}x${img.naturalHeight}`);
         canvas.width = img.naturalWidth;
         canvas.height = img.naturalHeight;
         canvas.style.width = `${img.naturalWidth}px`;
@@ -184,10 +194,15 @@ export class PdfViewer {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0);
       };
+      img.onerror = (e) => {
+        console.error('[Viewer] Failed to load image from base64 data', e);
+        alert('Failed to load the rendered image data onto the canvas.');
+      };
       // Rust returns: { page_index, zoom, image_data (base64 PNG) }
       img.src = `data:image/png;base64,${result.image_data}`;
     } catch (err) {
       console.error('[Viewer] Render error:', err);
+      alert(`Render error: ${err.message || err}`);
     }
   }
 

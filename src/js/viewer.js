@@ -21,6 +21,8 @@ export class PdfViewer {
     this.welcomeEl = document.querySelector('#viewer-welcome');
     this.loadingEl = document.querySelector('#viewer-loading');
     this.dropzoneEl = document.querySelector('#dropzone');
+    this.recentContainerEl = document.querySelector('#recent-files-container');
+    this.recentListEl = document.querySelector('#recent-files-list');
 
     this.totalPages = 0;
     this.currentPage = 1;
@@ -34,6 +36,7 @@ export class PdfViewer {
     this._pageCanvases = new Map();
 
     this._setupDragAndDrop();
+    this._loadRecentFiles();
   }
 
   // ---------- Public API ----------
@@ -62,6 +65,10 @@ export class PdfViewer {
       if (this.canvasContainer) this.canvasContainer.hidden = false;
 
       await this.renderCurrentPage();
+      
+      // Save to recent files
+      this._addRecentFile(filePath, this.fileTitle);
+
       this._emit('pdf:opened', {
         totalPages: this.totalPages,
         title: this.fileTitle,
@@ -91,6 +98,7 @@ export class PdfViewer {
     }
     this._pageCanvases.clear();
     this.showWelcome();
+    this._loadRecentFiles();
     this._emit('pdf:closed');
   }
 
@@ -242,6 +250,58 @@ export class PdfViewer {
   }
 
   // ---------- Private ----------
+
+  _addRecentFile(filePath, title) {
+    try {
+      let recent = JSON.parse(localStorage.getItem('wafflematrix-recent') || '[]');
+      recent = recent.filter(f => f.path !== filePath);
+      recent.unshift({ path: filePath, title: title });
+      if (recent.length > 3) recent.length = 3;
+      localStorage.setItem('wafflematrix-recent', JSON.stringify(recent));
+    } catch (err) {
+      console.warn('Failed to save recent files', err);
+    }
+  }
+
+  _loadRecentFiles() {
+    if (!this.recentContainerEl || !this.recentListEl) return;
+    
+    try {
+      const recent = JSON.parse(localStorage.getItem('wafflematrix-recent') || '[]');
+      if (recent.length === 0) {
+        this.recentContainerEl.hidden = true;
+        return;
+      }
+
+      this.recentContainerEl.hidden = false;
+      this.recentListEl.innerHTML = '';
+      
+      recent.forEach(file => {
+        const li = document.createElement('li');
+        li.className = 'viewer__recent-item';
+        // Simple PDF document icon
+        li.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          <div class="viewer__recent-item-info">
+            <div class="viewer__recent-item-name" title="${file.title}">${file.title}</div>
+            <div class="viewer__recent-item-path" title="${file.path}">&lrm;${file.path}</div>
+          </div>
+        `;
+        li.addEventListener('click', () => {
+          this._emit('file:dropped', { path: file.path });
+        });
+        this.recentListEl.appendChild(li);
+      });
+    } catch (err) {
+      console.warn('Failed to load recent files', err);
+    }
+  }
 
   _clearCanvases() {
     // With single canvas approach, just clear the canvas content

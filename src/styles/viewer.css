@@ -148,6 +148,83 @@
   border-radius: var(--radius-sm);
 }
 
+/* ---------- Recent files ---------- */
+.viewer__recent {
+  margin-top: var(--space-8);
+  width: 100%;
+  max-width: 440px;
+  text-align: left;
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-6);
+}
+
+.viewer__recent-title {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-3);
+}
+
+.viewer__recent-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.viewer__recent-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.viewer__recent-item:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent-subtle);
+  transform: translateY(-1px);
+}
+
+.viewer__recent-item svg {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  color: var(--text-muted);
+}
+
+.viewer__recent-item-info {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.viewer__recent-item-name {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.viewer__recent-item-path {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  direction: rtl;
+  text-align: left;
+}
+
 /* ---------- Drop zone ---------- */
 .viewer__dropzone {
   position: absolute;

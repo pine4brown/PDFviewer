@@ -28,6 +28,7 @@ const translations = {
     'viewer.welcome.title': 'WaffleMatrix PDF Viewer',
     'viewer.welcome.subtitle': 'Open a PDF file to get started, or drag and drop one here.',
     'viewer.welcome.shortcut': 'Ctrl+O to open',
+    'viewer.recent': 'Recent Files',
     'viewer.dropzone': 'Drop PDF file here',
     'viewer.loading': 'Loading...',
 
@@ -69,6 +70,7 @@ const translations = {
     'viewer.welcome.title': 'WaffleMatrix PDF ビューア',
     'viewer.welcome.subtitle': 'PDFファイルを開くか、ここにドラッグ＆ドロップしてください。',
     'viewer.welcome.shortcut': 'で開く',
+    'viewer.recent': '最近開いたファイル',
     'viewer.dropzone': 'PDFファイルをここにドロップ',
     'viewer.loading': '読み込み中...',
 

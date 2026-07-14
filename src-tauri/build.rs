@@ -51,13 +51,19 @@ fn download_pdfium_if_needed() {
         panic!("[build.rs] curl failed to download PDFium from {archive_url}");
     }
 
-    // Extract the shared library (always lives under lib/ in the archive)
+    // Extract the shared library (lives under bin/ for Windows, lib/ for others)
+    let extract_path = if target_os == "windows" {
+        format!("bin/{lib_filename}")
+    } else {
+        format!("lib/{lib_filename}")
+    };
+
     let status = std::process::Command::new("tar")
         .args([
             "-xzf", tmp_archive.to_str().unwrap(),
             "--strip-components=1",
             "-C", resources_dir.to_str().unwrap(),
-            &format!("lib/{lib_filename}"),
+            &extract_path,
         ])
         .status()
         .expect("[build.rs] tar not found");
@@ -69,7 +75,7 @@ fn download_pdfium_if_needed() {
             "[build.rs] Failed to extract '{lib_filename}' from the archive.\n\
              You can manually download the library:\n\
              1. curl -L -o /tmp/pdfium.tgz \"{archive_url}\"\n\
-             2. tar -xzf /tmp/pdfium.tgz --strip-components=1 -C src-tauri/resources lib/{lib_filename}"
+             2. tar -xzf /tmp/pdfium.tgz --strip-components=1 -C src-tauri/resources {extract_path}"
         );
     }
 

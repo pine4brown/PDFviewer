@@ -38,6 +38,7 @@ pub struct OutlineItem {
 /// Persistent state for the currently open document.
 /// Only serialisable / `Send`-safe data is stored here.
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct DocumentState {
     /// Path the document was loaded from.
     pub path: PathBuf,
@@ -67,6 +68,7 @@ pub fn bind_pdfium(lib_path: &str) -> Result<Pdfium, String> {
 // ---- Path validation -------------------------------------------------------
 
 /// Validate that a path points to an existing, readable file.
+#[allow(dead_code)]
 pub fn validate_path(path: &str) -> Result<(), String> {
     let p = std::path::Path::new(path);
     if !p.exists() {

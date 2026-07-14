@@ -34,9 +34,11 @@ export class PdfViewer {
 
     /** @type {Map<number, HTMLCanvasElement>} */
     this._pageCanvases = new Map();
+    this._renderId = 0;
 
     this._setupDragAndDrop();
     this._loadRecentFiles();
+    this._setupWheelZoom();
   }
 
   // ---------- Public API ----------
@@ -174,10 +176,21 @@ export class PdfViewer {
   async renderCurrentPage() {
     if (!this.filePath || this.totalPages === 0) return;
 
+    const currentId = ++this._renderId;
+    
+    // 50ms debounce: Wait slightly before asking Rust to render.
+    // If the user scrolls rapidly, we skip rendering intermediate frames.
+    await new Promise(r => setTimeout(r, 50));
+    if (this._renderId !== currentId) return;
+
     try {
       console.log(`[Viewer] Requesting render for page ${this.currentPage - 1} at zoom ${this.zoom}`);
       // Backend expects 0-based page index
       const result = await renderPage(this.currentPage - 1, this.zoom);
+      
+      // If a newer render was requested while Rust was busy, discard this outdated result.
+      if (this._renderId !== currentId) return;
+
       if (!result) {
         console.error('[Viewer] renderPage returned null/undefined');
         return;
@@ -353,6 +366,26 @@ export class PdfViewer {
         }
       }
     });
+  }
+
+  _setupWheelZoom() {
+    let lastWheelTime = 0;
+    this.container.addEventListener('wheel', (e) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
+        
+        // Throttle wheel events to at most once per 100ms
+        const now = Date.now();
+        if (now - lastWheelTime < 100) return;
+        lastWheelTime = now;
+
+        if (e.deltaY < 0) {
+          this.zoomIn();
+        } else if (e.deltaY > 0) {
+          this.zoomOut();
+        }
+      }
+    }, { passive: false });
   }
 
   /**

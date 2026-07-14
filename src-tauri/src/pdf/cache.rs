@@ -64,6 +64,7 @@ impl PageCache {
     }
 
     /// Check whether a key is present without promoting it in the LRU order.
+    #[allow(dead_code)]
     pub fn contains(&self, page_index: u16, zoom: f32) -> bool {
         self.inner.contains(&CacheKey::new(page_index, zoom))
     }

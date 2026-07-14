@@ -23,9 +23,12 @@ export class Sidebar {
     this.thumbnailList = el.querySelector('#thumbnails-content');
 
     this._activeTab = 'outline';
-    this._isOpen = true;
+    this._isOpen = false;
     this._outline = [];
     this._thumbnailsLoaded = new Set();
+
+    // Set initial DOM state
+    this.el.classList.toggle('is-collapsed', !this._isOpen);
 
     this._bindEvents();
   }

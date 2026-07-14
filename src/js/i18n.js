@@ -68,7 +68,7 @@ const translations = {
     // ビューア
     'viewer.welcome.title': 'WaffleMatrix PDF ビューア',
     'viewer.welcome.subtitle': 'PDFファイルを開くか、ここにドラッグ＆ドロップしてください。',
-    'viewer.welcome.shortcut': 'Ctrl+O で開く',
+    'viewer.welcome.shortcut': 'で開く',
     'viewer.dropzone': 'PDFファイルをここにドロップ',
     'viewer.loading': '読み込み中...',
 

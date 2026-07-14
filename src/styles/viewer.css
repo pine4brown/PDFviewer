@@ -102,6 +102,20 @@
   }
 }
 
+.viewer__logo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  width: 36px;
+  height: 36px;
+}
+
+.viewer__logo-grid span {
+  background-color: white;
+  border-radius: 2px;
+  opacity: 0.9;
+}
+
 .viewer__welcome-icon svg {
   width: 36px;
   height: 36px;

@@ -105,3 +105,46 @@ export async function openFileDialog() {
     return null;
   }
 }
+
+/**
+ * Compare two PDF files.
+ * @param {string} oldPath - Absolute path to the old PDF.
+ * @param {string} newPath - Absolute path to the new PDF.
+ * @param {('text'|'visual'|'hybrid')} [mode='text'] - Comparison mode.
+ * @returns {Promise<{ok: boolean, message: string, report?: object}>}
+ */
+export async function comparePdfs(oldPath, newPath, mode = 'text') {
+  return invoke('compare_pdfs', { args: { oldPath, newPath, mode } });
+}
+
+/**
+ * Get the most recently computed diff report.
+ * @returns {Promise<object|null>}
+ */
+export async function getDiffReport() {
+  return invoke('get_diff_report');
+}
+
+/**
+ * Export the current diff report to a file.
+ * @param {string} path - Destination path.
+ * @param {string} [format='xlsx'] - 'xlsx' | 'csv' | 'json' | 'html'.
+ * @returns {Promise<{ok: boolean, message: string}>}
+ */
+export async function exportDiff(path, format = 'xlsx') {
+  return invoke('export_diff', { args: { path, format } });
+}
+
+/**
+ * Open a native "save as" dialog for a diff report.
+ * @param {string} [format='xlsx']
+ * @returns {Promise<string|null>}
+ */
+export async function saveDiffDialog(format = 'xlsx') {
+  try {
+    return await invoke('save_diff_dialog', { format });
+  } catch (err) {
+    console.error('[WaffleMatrix] Save dialog error:', err);
+    return null;
+  }
+}

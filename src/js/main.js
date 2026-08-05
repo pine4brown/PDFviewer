@@ -8,6 +8,7 @@ import { PdfViewer } from './viewer.js';
 import { Toolbar } from './toolbar.js';
 import { Sidebar } from './sidebar.js';
 import { SearchPanel } from './search.js';
+import { DiffPanel } from './diff.js';
 
 class App {
   constructor() {
@@ -19,6 +20,8 @@ class App {
     this.sidebar = null;
     /** @type {SearchPanel} */
     this.search = null;
+    /** @type {DiffPanel} */
+    this.diff = null;
   }
 
   init() {
@@ -40,6 +43,10 @@ class App {
     // Initialize search panel
     const searchEl = document.querySelector('.search-panel');
     this.search = new SearchPanel(searchEl, { viewer: this.viewer });
+
+    // Initialize diff panel
+    const diffEl = document.querySelector('#diff-panel');
+    this.diff = new DiffPanel(diffEl, { viewer: this.viewer, sidebar: this.sidebar });
 
     // Wire events
     this._wireEvents();
@@ -112,6 +119,17 @@ class App {
     document.addEventListener('toolbar:search', () => {
       const isOpen = this.search.toggle();
       this.toolbar.setSearchState(isOpen);
+    });
+
+    // Compare toggle from toolbar
+    document.addEventListener('toolbar:compare', () => {
+      if (this.diff.isOpen) {
+        this.diff.close();
+      } else {
+        this.search.close();
+        this.toolbar.setSearchState(false);
+        this.diff.open();
+      }
     });
 
     // Search closed

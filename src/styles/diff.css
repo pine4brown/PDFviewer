@@ -1,0 +1,306 @@
+/* ==========================================================================
+   WaffleMatrix PDF Viewer — Diff Panel
+   Two-file PDF comparison UI and report export.
+   ========================================================================== */
+
+.diff {
+  flex: 1;
+  overflow: auto;
+  background: var(--bg-primary);
+  padding: var(--space-6);
+  box-sizing: border-box;
+}
+
+/* ---------- Setup section ---------- */
+.diff__setup {
+  max-width: 760px;
+  margin: 0 auto;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 12px);
+  padding: var(--space-6);
+  box-shadow: var(--glass-shadow);
+}
+
+.diff__title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-5);
+  color: var(--text-primary);
+}
+
+.diff__files {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.diff__file-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-2);
+}
+
+.diff__file-row {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.diff__file-input {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 8px);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+}
+
+.diff__file-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-subtle);
+}
+
+.diff__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.diff__mode-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.diff__select {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 8px);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+}
+
+.diff__btn {
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 8px);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background var(--duration-fast, 0.15s) ease, border-color var(--duration-fast, 0.15s) ease;
+}
+
+.diff__btn:hover:not(:disabled) {
+  border-color: var(--border-hover);
+  background: var(--bg-secondary);
+}
+
+.diff__btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.diff__btn--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.diff__btn--primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.diff__message {
+  margin-top: var(--space-4);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  min-height: 1.2em;
+}
+
+.diff__message--error {
+  color: var(--danger);
+}
+
+/* ---------- Results ---------- */
+.diff__results {
+  max-width: 1100px;
+  margin: var(--space-6) auto 0;
+}
+
+.diff__results-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+
+.diff__results-title {
+  font-size: 1.1rem;
+  margin: 0 0 var(--space-1);
+  color: var(--text-primary);
+}
+
+.diff__summary-text {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.diff__export {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+/* ---------- Page list ---------- */
+.diff__page {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 8px);
+  margin-bottom: var(--space-3);
+  background: var(--bg-elevated);
+  overflow: hidden;
+}
+
+.diff__page-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  list-style: none;
+}
+
+.diff__page-summary::-webkit-details-marker {
+  display: none;
+}
+
+.diff__page-summary::before {
+  content: '▸';
+  transition: transform 0.15s ease;
+  color: var(--text-muted);
+}
+
+.diff__page[open] .diff__page-summary::before {
+  transform: rotate(90deg);
+}
+
+.diff__page-no {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.diff__page-status {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  color: #fff;
+}
+
+.diff__status--added {
+  background: var(--success);
+}
+
+.diff__status--removed {
+  background: var(--danger);
+}
+
+.diff__status--modified {
+  background: var(--warning);
+}
+
+.diff__status--match {
+  background: var(--text-muted);
+}
+
+.diff__page-count {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* ---------- Diff table ---------- */
+.diff__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.diff__table th {
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-weight: 600;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.diff__table td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--divider);
+  vertical-align: top;
+  color: var(--text-primary);
+}
+
+.diff__table tbody tr:hover {
+  background: var(--accent-subtle);
+}
+
+.diff__line {
+  text-align: right;
+  color: var(--text-muted);
+  width: 3.5em;
+}
+
+.diff__region {
+  color: var(--text-muted);
+  width: 5em;
+}
+
+.diff__text {
+  white-space: pre-wrap;
+  word-break: break-word;
+  min-width: 12em;
+}
+
+.diff__kind {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 999px;
+  color: #fff;
+}
+
+.diff__kind--added {
+  background: var(--success);
+}
+
+.diff__kind--removed {
+  background: var(--danger);
+}
+
+.diff__kind--modified {
+  background: var(--warning);
+}
+
+.diff__empty {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  padding: var(--space-4) 0;
+}

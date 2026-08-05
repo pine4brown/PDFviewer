@@ -13,6 +13,7 @@
 
 use parking_lot::Mutex;
 
+use crate::diff::report::DiffReport;
 use crate::pdf::cache::PageCache;
 use crate::pdf::engine::DocumentState;
 
@@ -34,6 +35,9 @@ pub struct AppState {
 
     /// LRU cache of recently rendered page images (base64 PNG strings).
     pub cache: Mutex<PageCache>,
+
+    /// The most recently computed diff report, if any.
+    pub diff_report: Mutex<Option<DiffReport>>,
 }
 
 impl AppState {
@@ -45,6 +49,7 @@ impl AppState {
             current_path: Mutex::new(None),
             current_bytes: Mutex::new(None),
             cache: Mutex::new(PageCache::new()),
+            diff_report: Mutex::new(None),
         }
     }
 }

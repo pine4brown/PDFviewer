@@ -28,6 +28,7 @@
     <link rel="stylesheet" href="./styles/toolbar.css" />
     <link rel="stylesheet" href="./styles/sidebar.css" />
     <link rel="stylesheet" href="./styles/viewer.css" />
+    <link rel="stylesheet" href="./styles/diff.css" />
   </head>
 
   <body>
@@ -62,6 +63,22 @@
               <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
             </svg>
             <span data-i18n="toolbar.open">Open</span>
+          </button>
+
+          <button
+            id="btn-compare"
+            class="toolbar-btn toolbar-btn--text"
+            aria-label="Compare PDFs"
+            data-i18n-aria="toolbar.compare"
+            title="Compare PDFs"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="3" width="7" height="7" rx="1"/>
+              <rect x="14" y="3" width="7" height="7" rx="1"/>
+              <rect x="3" y="14" width="7" height="7" rx="1"/>
+              <rect x="14" y="14" width="7" height="7" rx="1"/>
+            </svg>
+            <span data-i18n="toolbar.compare">Compare</span>
           </button>
         </div>
 
@@ -324,6 +341,74 @@
             </div>
           </div>
         </main>
+
+        <!-- ===== DIFF PANEL ===== -->
+        <section class="diff" id="diff-panel" role="region" aria-label="PDF comparison" hidden>
+          <div class="diff__setup">
+            <h1 class="diff__title" data-i18n="diff.title">Compare PDF Files</h1>
+
+            <div class="diff__files">
+              <div class="diff__file">
+                <label class="diff__file-label" data-i18n="diff.oldLabel">Old PDF</label>
+                <div class="diff__file-row">
+                  <input
+                    id="diff-old-path"
+                    class="diff__file-input"
+                    type="text"
+                    readonly
+                    placeholder="Select the old PDF..."
+                    data-i18n-placeholder="diff.oldPlaceholder"
+                  />
+                  <button id="btn-diff-old" class="diff__btn" data-i18n="diff.browse">Browse…</button>
+                </div>
+              </div>
+              <div class="diff__file">
+                <label class="diff__file-label" data-i18n="diff.newLabel">New PDF</label>
+                <div class="diff__file-row">
+                  <input
+                    id="diff-new-path"
+                    class="diff__file-input"
+                    type="text"
+                    readonly
+                    placeholder="Select the new PDF..."
+                    data-i18n-placeholder="diff.newPlaceholder"
+                  />
+                  <button id="btn-diff-new" class="diff__btn" data-i18n="diff.browse">Browse…</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="diff__controls">
+              <label class="diff__mode-label" data-i18n="diff.mode">Mode</label>
+              <select id="diff-mode" class="diff__select">
+                <option value="text" data-i18n="diff.modeText">Text (data sheets / specs)</option>
+                <option value="visual" data-i18n="diff.modeVisual">Visual (schematics / layouts)</option>
+                <option value="hybrid" data-i18n="diff.modeHybrid">Hybrid</option>
+              </select>
+              <button id="btn-diff-run" class="diff__btn diff__btn--primary" data-i18n="diff.run">Compare</button>
+              <button id="btn-diff-back" class="diff__btn" data-i18n="diff.back">Back</button>
+            </div>
+
+            <p id="diff-message" class="diff__message" aria-live="polite"></p>
+          </div>
+
+          <div class="diff__results" id="diff-results" hidden>
+            <div class="diff__results-head">
+              <div>
+                <h2 class="diff__results-title" data-i18n="diff.results">Comparison Results</h2>
+                <p id="diff-summary" class="diff__summary-text"></p>
+              </div>
+              <div class="diff__export">
+                <button class="diff__btn" data-export="xlsx" data-i18n="diff.exportXlsx">Export Excel</button>
+                <button class="diff__btn" data-export="csv" data-i18n="diff.exportCsv">Export CSV</button>
+                <button class="diff__btn" data-export="json" data-i18n="diff.exportJson">Export JSON</button>
+                <button class="diff__btn" data-export="html" data-i18n="diff.exportHtml">Export HTML</button>
+              </div>
+            </div>
+
+            <div id="diff-page-list" class="diff__page-list"></div>
+          </div>
+        </section>
       </div><!-- /.app__body -->
 
     </div><!-- /.app -->

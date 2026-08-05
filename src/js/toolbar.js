@@ -135,6 +135,11 @@ export class Toolbar {
       }
     });
 
+    // Compare PDFs
+    document.querySelector('#btn-compare')?.addEventListener('click', () => {
+      this.el.dispatchEvent(new CustomEvent('toolbar:compare', { bubbles: true }));
+    });
+
     // Page navigation
     this.prevBtn?.addEventListener('click', () => this.viewer.prevPage());
     this.nextBtn?.addEventListener('click', () => this.viewer.nextPage());

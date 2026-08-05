@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 220" width="100%" height="100%">
+  <rect width="600" height="220" fill="#f1f5f9" rx="12"/>
+  <text x="300" y="32" font-family="Hiragino Sans, sans-serif" font-size="18" font-weight="bold" fill="#0f172a" text-anchor="middle">システム構成図 v1.1 (Cache層追加)</text>
+  
+  <!-- Node 1: Client -->
+  <rect x="25" y="70" width="115" height="80" fill="#2563eb" rx="8"/>
+  <text x="82.5" y="105" font-family="Hiragino Sans, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">Web Client</text>
+  <text x="82.5" y="125" font-family="Hiragino Sans, sans-serif" font-size="10" fill="#e0f2fe" text-anchor="middle">Tauri / React</text>
+
+  <!-- Arrow 1 -->
+  <path d="M 140 110 L 165 110" stroke="#475569" stroke-width="3" marker-end="url(#arrow2)"/>
+
+  <!-- Node 2: API Gateway -->
+  <rect x="170" y="70" width="115" height="80" fill="#059669" rx="8"/>
+  <text x="227.5" y="105" font-family="Hiragino Sans, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">API Gateway</text>
+  <text x="227.5" y="125" font-family="Hiragino Sans, sans-serif" font-size="10" fill="#ecfdf5" text-anchor="middle">Rust Actix</text>
+
+  <!-- Arrow 2 -->
+  <path d="M 285 110 L 310 110" stroke="#475569" stroke-width="3" marker-end="url(#arrow2)"/>
+
+  <!-- Node 3: Cache Cluster (New!) -->
+  <rect x="315" y="70" width="115" height="80" fill="#8b5cf6" rx="8"/>
+  <text x="372.5" y="105" font-family="Hiragino Sans, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">Cache Cluster</text>
+  <text x="372.5" y="125" font-family="Hiragino Sans, sans-serif" font-size="10" fill="#f3e8ff" text-anchor="middle">Redis In-Memory</text>
+
+  <!-- Arrow 3 -->
+  <path d="M 430 110 L 455 110" stroke="#475569" stroke-width="3" marker-end="url(#arrow2)"/>
+
+  <!-- Node 4: Database -->
+  <rect x="460" y="70" width="115" height="80" fill="#ea580c" rx="8"/>
+  <text x="517.5" y="105" font-family="Hiragino Sans, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">DB Server</text>
+  <text x="517.5" y="125" font-family="Hiragino Sans, sans-serif" font-size="10" fill="#ffedd5" text-anchor="middle">PostgreSQL 16</text>
+
+  <!-- Marker definition -->
+  <defs>
+    <marker id="arrow2" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+  </defs>
+
+  <text x="300" y="190" font-family="Hiragino Sans, sans-serif" font-size="12" font-weight="bold" fill="#059669" text-anchor="middle">処理能力: 10,000 req/sec (10倍高速化)</text>
+</svg>

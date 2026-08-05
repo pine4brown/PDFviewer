@@ -1,6 +1,7 @@
 //! WaffleMatrix PDF Viewer — Tauri application entry point.
 
 mod commands;
+pub mod diff;
 mod pdf;
 mod state;
 
@@ -64,6 +65,10 @@ pub fn run() {
             commands::page::get_thumbnails,
             commands::page::get_outline,
             commands::search::search_text,
+            commands::diff::compare_pdfs,
+            commands::diff::get_diff_report,
+            commands::diff::export_diff,
+            commands::diff::save_diff_dialog,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

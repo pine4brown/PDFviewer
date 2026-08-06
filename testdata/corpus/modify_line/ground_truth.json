@@ -1,0 +1,22 @@
+{
+  "name": "modify_line",
+  "description": "One word changed inside a line. Text mode should report one modified line.",
+  "pages": [
+    {
+      "page": 1,
+      "status": "modified",
+      "regions": [
+        {
+          "rect": [
+            72.0,
+            83.01001,
+            124.8,
+            94.04999
+          ],
+          "old_text": "Line two",
+          "new_text": "Line TWO"
+        }
+      ]
+    }
+  ]
+}

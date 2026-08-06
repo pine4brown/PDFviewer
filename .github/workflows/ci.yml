@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+  # PDFium libraries are committed under src-tauri/resources/ and resolved by
+  # resolve_pdfium_lib_path() (also via the PDFIUM_LIB_PATH override if needed).
+
+jobs:
+  test-and-eval:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            src-tauri/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}
+
+      - name: Build (lib + CLI)
+        run: cargo build --bin wafflematrix-cli
+        working-directory: src-tauri
+
+      - name: Run tests
+        run: cargo test
+        working-directory: src-tauri
+
+      - name: Regenerate synthetic corpus
+        run: cargo run --bin wafflematrix-cli -- gen --force
+        working-directory: src-tauri
+
+      # Accuracy gate: fails the pipeline when text-content F1 drops below 0.9.
+      - name: Evaluate diff accuracy
+        run: cargo run --bin wafflematrix-cli -- eval --min-f1 0.9 --ci --report ../testdata/eval-report.json
+        working-directory: src-tauri
+
+      - name: Upload eval report
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-report
+          path: testdata/eval-report.json
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build (lib + CLI)
+        run: cargo build --bin wafflematrix-cli
+        working-directory: src-tauri

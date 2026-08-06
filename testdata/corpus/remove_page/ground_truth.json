@@ -1,0 +1,16 @@
+{
+  "name": "remove_page",
+  "description": "Old document has a page that is gone in the new one. Page 2 must be marked removed.",
+  "pages": [
+    {
+      "page": 1,
+      "status": "match",
+      "regions": []
+    },
+    {
+      "page": 2,
+      "status": "removed",
+      "regions": []
+    }
+  ]
+}

@@ -65,6 +65,60 @@ pub fn bind_pdfium(lib_path: &str) -> Result<Pdfium, String> {
     Ok(Pdfium::new(bindings))
 }
 
+// ---- Path resolution -------------------------------------------------------
+
+/// File name of the PDFium shared library for the current platform.
+pub fn pdfium_lib_filename() -> &'static str {
+    #[cfg(target_os = "windows")]
+    return "pdfium.dll";
+
+    #[cfg(target_os = "macos")]
+    return "libpdfium.dylib";
+
+    #[cfg(target_os = "linux")]
+    return "libpdfium.so";
+
+    #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
+    compile_error!("Unsupported platform.");
+}
+
+/// Resolve the PDFium shared library path without a running Tauri app.
+///
+/// Candidates, in order:
+/// 1. the `PDFIUM_LIB_PATH` environment variable, if set,
+/// 2. `<crate_dir>/resources/<lib>` (dev checkout / bundled tests),
+/// 3. the directory next to the current executable.
+pub fn resolve_pdfium_lib_path() -> Result<String, String> {
+    if let Ok(p) = std::env::var("PDFIUM_LIB_PATH") {
+        if std::path::Path::new(&p).exists() {
+            return Ok(p);
+        }
+    }
+
+    let name = pdfium_lib_filename();
+    let crate_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_default();
+    let candidates: Vec<PathBuf> = vec![
+        std::path::Path::new(&crate_dir).join("resources").join(name),
+        std::env::current_exe()
+            .ok()
+            .and_then(|p| p.parent().map(|d| d.join(name)))
+            .unwrap_or_default(),
+    ];
+
+    candidates
+        .into_iter()
+        .find(|p| p.exists())
+        .map(|p| p.to_string_lossy().into_owned())
+        .ok_or_else(|| {
+            format!(
+                "PDFium library '{name}' not found. Set PDFIUM_LIB_PATH or place it in {}.",
+                std::path::Path::new(&crate_dir)
+                    .join("resources")
+                    .display()
+            )
+        })
+}
+
 // ---- Path validation -------------------------------------------------------
 
 /// Validate that a path points to an existing, readable file.

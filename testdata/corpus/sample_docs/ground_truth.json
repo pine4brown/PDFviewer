@@ -1,0 +1,173 @@
+{
+  "name": "sample_docs",
+  "description": "Golden snapshot of the real sample document pair (v1 vs v2) in text mode.",
+  "pages": [
+    {
+      "page": 1,
+      "status": "modified",
+      "regions": [
+        {
+          "rect": null,
+          "old_text": "初期 版) バージョン 1.0 ( リリース",
+          "new_text": "高速・高精度 改訂版) バージョン 1.1 ("
+        },
+        {
+          "rect": null,
+          "old_text": "開発 チーム",
+          "new_text": "グループ コアアーキテクチャ 開発"
+        },
+        {
+          "rect": null,
+          "old_text": "2026 年 8 月 1 日",
+          "new_text": "2026 年 8 月 5 日"
+        },
+        {
+          "rect": null,
+          "old_text": "ビュワー 自動差分検出機能 定義 初期仕様 本 を ドキュメント するもの における は、 PDF の",
+          "new_text": "ビュワー 自動差分検出機能 定義 改定仕様（ v1.1） 本 を ドキュメント における は、 PDF の"
+        },
+        {
+          "rect": null,
+          "old_text": "ユーザー が 比較 指定 本 を した 2 つの ドキュメント テキスト・ です。 本 システム は、 し、 PDF",
+          "new_text": "ユーザー が 比較 指定 本 を した 2 つの ドキュメント するものです。 システム は、 し、 PDF"
+        },
+        {
+          "rect": null,
+          "old_text": "および 変更箇所 図表（画像） 精密 段落構造・表・ 表示 判定 上 を ハイライト GUI に して の で",
+          "new_text": "および 変更箇所 図表（画像） 段落構造・表・ 判定 リアルタイム を テキスト・ GUI に して の"
+        },
+        {
+          "rect": null,
+          "old_text": "します。",
+          "new_text": "導入 鮮明 並列処理 表示 上 を します。また、 マルチスレッド しました。 ハイライト に で"
+        },
+        {
+          "rect": null,
+          "old_text": "改訂 自動化 作業 主 見落 目的 人的 防 な チェック を を ドキュメント としによる は、 し、 ミス の",
+          "new_text": "改訂 全自動化 作業 主 見落 目的 人的 な チェック を を ドキュメント としによる は、 し、 ミス の"
+        },
+        {
+          "rect": null,
+          "old_text": "既存 提供 直感的 高速 比較 比較 止 な を して、より することです。 と PDF ツール UI/UX の で",
+          "new_text": "既存 高度 直感的 視 削減 比較 比較 な して、より することです。 と と PDF ツール UI/UX の で"
+        },
+        {
+          "rect": null,
+          "old_text": "します。",
+          "new_text": "レポート 提供 覚的差分 を します。"
+        },
+        {
+          "rect": null,
+          "old_text": "バージョン 1.0 基準 仕様 を します。 における 以下 パフォーマンス に、 示",
+          "new_text": "バージョン 1.1 仕様 最新 を します。 における 以下 パフォーマンス に、 示 の"
+        },
+        {
+          "rect": null,
+          "old_text": "標準 対応 形式 ベクトル/テキスト ファイル PDF (v1.4 - v2.0) PDF",
+          "new_text": "多様 対応 形式 形式 な ドキュメント ファイル PDF (v1.4 - v2.0), XPS"
+        },
+        {
+          "rect": null,
+          "old_text": "ページ 100 ページ 推奨 2 最大比較 数 GB メモリ",
+          "new_text": "サポート を"
+        },
+        {
+          "rect": null,
+          "old_text": "シングルスレッド ページ 平均処理速度 1.5 秒 / 処理 CPU",
+          "new_text": "ページ 500 ページ 最大比較 数 拡張 上限 4 GB に メモリ"
+        },
+        {
+          "rect": null,
+          "old_text": "および 差分検出精度 標準図表 テキスト 95.0 %",
+          "new_text": "ページ 平均処理速度 0.4 秒 / 並列 アクセラ GPU/NPU"
+        },
+        {
+          "rect": null,
+          "old_text": "対応動作環境 実験的対応 は macOS, Windows 11 Linux",
+          "new_text": "有効 レーション"
+        },
+        {
+          "rect": null,
+          "old_text": "対応動作環境 実験的対応 は macOS, Windows 11 Linux",
+          "new_text": "ピクセルレベル 差分検出精度 微細判定 99.8 % の"
+        },
+        {
+          "rect": null,
+          "old_text": "対応動作環境 実験的対応 は macOS, Windows 11 Linux",
+          "new_text": "対応"
+        },
+        {
+          "rect": null,
+          "old_text": "対応動作環境 実験的対応 は macOS, Windows 11 Linux",
+          "new_text": "対応動作環境 プラットフォーム 主要 完全 macOS, Windows 11,"
+        },
+        {
+          "rect": null,
+          "old_text": "対応動作環境 実験的対応 は macOS, Windows 11 Linux",
+          "new_text": "対応 Ubuntu 24.04"
+        },
+        {
+          "rect": null,
+          "old_text": "フェーズ システムコンポーネント 構成図 初期 を します。 における 以下 に、 示",
+          "new_text": "システムコンポーネント 高速 追加 最新 構成図 を を 層 した キャッシュ します。 以下 に、 示 の"
+        }
+      ]
+    },
+    {
+      "page": 2,
+      "status": "modified",
+      "regions": [
+        {
+          "rect": null,
+          "old_text": "構 成 ム 図 0 シ 1 テ ス v .",
+          "new_text": "追 構 成 加 層 ム 図 C ( ) シ 1 1 h テ ス c e a v ."
+        },
+        {
+          "rect": null,
+          "old_text": "S G C P D B W b l i A I t t e e e e e a a n r r w y v",
+          "new_text": "S G C C C P D B W b l i A I h l t t t c e e e e e e e s a a a n r r r w y u v"
+        },
+        {
+          "rect": null,
+          "old_text": "G C Q S S E T R R R P P U I / L t t a c e o s e g g r",
+          "new_text": "Q S 6 Ta 1 R R R P i / A i d i I M L t t t t Ta a c c e s e s e o o s e m n r r g r u u x y -"
+        },
+        {
+          "rect": null,
+          "old_text": "能 処 力 理 0 0 0 1 / c e s e q r : ,",
+          "new_text": "倍 能 化 高 速 処 力 理 0 0 0 0 0 ( ) 1 1 / c e e s q r : ,"
+        },
+        {
+          "rect": null,
+          "old_text": "システムアーキテクチャ 図 ( v1.0) Figure 1:",
+          "new_text": "システムアーキテクチャ 図 ( v1.1) Figure 1:"
+        },
+        {
+          "rect": null,
+          "old_text": "が 解除 保護 暗号化 施 は、あらかじめ を された パスワード や してから ファイル イン 2. PDF",
+          "new_text": "スムーズ が 解除機能 自動 保護 暗号化 施 により された パスワード や ファイル は、 に 2. PDF"
+        },
+        {
+          "rect": null,
+          "old_text": "ポート があります。 必要 する",
+          "new_text": "読 込 まれます。 み"
+        },
+        {
+          "rect": null,
+          "old_text": "解像度 違 画像差分 誤検出 閾値設定 適切 比較 防 を を ぐため いによる においては、 3. に の の",
+          "new_text": "バックグラウンドモード」 から「 大容量 高速 比較時 設定 を ドキュメント には、 3. メニュー"
+        },
+        {
+          "rect": null,
+          "old_text": "ってください。 行",
+          "new_text": "推奨 選択 することを します。"
+        },
+        {
+          "rect": null,
+          "old_text": "ってください。 行",
+          "new_text": "データ ログ 差分 出力可能 検出 構造化 形式 した または です。 として は、 JSON PDF 4."
+        }
+      ]
+    }
+  ]
+}

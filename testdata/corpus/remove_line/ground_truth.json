@@ -1,0 +1,21 @@
+{
+  "name": "remove_line",
+  "description": "One line deleted. Text mode should report one removed line.",
+  "pages": [
+    {
+      "page": 1,
+      "status": "modified",
+      "regions": [
+        {
+          "rect": [
+            72.0,
+            83.01001,
+            131.4,
+            94.04999
+          ],
+          "old_text": "Remove me"
+        }
+      ]
+    }
+  ]
+}

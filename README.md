@@ -93,7 +93,52 @@ src-tauri/src/
     visual.rs   → ラスタライズ・軽量アライメント・画素比較
     report.rs   → DiffReport データモデル
     export.rs   → xlsx / csv / json / html 出力
+  bench/
+    case.rs     → ground truth データモデル
+    gen.rs      → 合成PDF生成（決定的・シード付き）
+    score.rs    → 精度メトリクス（P/R/F1）
+    eval.rs     → コーパス実行・集計・レポート
 ```
+
+## CLIツール（精度評価）
+
+GUIを使わずヘッドレスで差分を取れる **`wafflematrix-cli`** を提供しています。
+`src-tauri` ディレクトリから実行します（PDFiumは自動検出。`--pdfium <path>` または環境変数 `PDFIUM_LIB_PATH` で上書き可）。
+
+```bash
+# 2つのPDFを比較し、人間向けサマリを表示
+cargo run --bin wafflematrix-cli -- compare --old a.pdf --new b.pdf --mode hybrid
+
+# レポートをJSON/Excel等に出力（拡張子で形式決定。 "-" はJSONをstdoutへ）
+cargo run --bin wafflematrix-cli -- compare --old a.pdf --new b.pdf --output report.xlsx
+
+# 合成テストコーパスを再生成（testdata/corpus/）
+cargo run --bin wafflematrix-cli -- gen --force
+
+# 精度評価を実行（--min-f1未達でexit 1、CIゲートに使用）
+cargo run --bin wafflematrix-cli -- eval --min-f1 0.9
+
+# 実PDFペアを"ゴールデン"ケースとして凍結（現在の出力をground truth化して回帰監視）
+cargo run --bin wafflematrix-cli -- golden --name sample_docs --old v1.pdf --new v2.pdf
+```
+
+### 評価コーパス（`testdata/corpus/`）
+各ケースは `<name>/old.pdf` `<name>/new.pdf` `<name>/ground_truth.json` で構成されます。
+`eval` は各ケースを各モードで比較し、ground truth と照合して以下を報告します。
+
+- **テキスト内容一致F1**（主指標・text/hybrid）: 変更行を正規化テキストで突合。追加/削除/修正の分類差に寛容
+- **領域重なりF1**（visual）: 検出`visual_rects`とGT矩形を包含率で突合
+- **ページ分類精度**: ページ状態（match/modified/added/removed）の一致率
+- **誤検知ドキュメント数**: 全ページが変化なしと期待されるケースで差分を誤検出した数
+
+`gen` の合成ケースは `src-tauri/src/bench/gen.rs` の `case_definitions()` に定義されており、
+シードから決定的に生成されます。**新しいテストケースの追加**は、同関数にケースを足し、
+`gen --force` で再生成するだけです。実PDFの回帰監視には `golden` サブコマンドを使います。
+
+### CI
+GitHub Actions（`.github/workflows/ci.yml`）がpush/PR時に
+`cargo build` → `cargo test` → `gen --force` → `eval --min-f1 0.9` を実行し、
+テキスト差分精度のリグレッションを自動検出します。
 
 ## ライセンス
 LICENSE ファイルを参照してください。

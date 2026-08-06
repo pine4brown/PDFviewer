@@ -1,0 +1,21 @@
+{
+  "name": "insert_line",
+  "description": "One line inserted between existing lines. Text mode should report one added line.",
+  "pages": [
+    {
+      "page": 1,
+      "status": "modified",
+      "regions": [
+        {
+          "rect": [
+            72.0,
+            71.01001,
+            124.8,
+            82.04999
+          ],
+          "new_text": "Inserted"
+        }
+      ]
+    }
+  ]
+}

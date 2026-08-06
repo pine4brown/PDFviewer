@@ -1,11 +1,11 @@
 //! WaffleMatrix PDF Viewer — Tauri application entry point.
 
 mod commands;
+pub mod bench;
 pub mod diff;
-mod pdf;
+pub mod pdf;
 mod state;
 
-use std::path::PathBuf;
 use state::AppState;
 use tauri::Manager;
 
@@ -15,45 +15,34 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
+            // In a Tauri app the PDFium lib usually lands inside the resource
+            // directory; resolve there first, then fall back to the generic
+            // dev-checkout / executable locations.
             let lib_filename = pdfium_lib_filename();
 
             let resource_dir = app.path().resource_dir()
                 .map_err(|e| format!("Cannot resolve resource directory: {e}"))?;
 
-            // Tauri's `resources` array copies files preserving their source
-            // directory structure.  We specified "resources/libpdfium.dylib"
-            // in tauri.conf.json, so it lands at:
-            //   <resource_dir>/resources/libpdfium.dylib   (bundle)
-            //   <resource_dir>/libpdfium.dylib             (dev, flat)
-            //
-            // We try candidate paths in order and use the first that exists.
-            let candidates: Vec<PathBuf> = vec![
+            let lib_path = vec![
                 resource_dir.join("resources").join(lib_filename), // bundled .app
                 resource_dir.join(lib_filename),                   // tauri dev
-                // Fallback: same directory as the executable
-                std::env::current_exe()
-                    .ok()
-                    .and_then(|p| p.parent().map(|d| d.join(lib_filename)))
-                    .unwrap_or_default(),
-            ];
+            ]
+            .into_iter()
+            .find(|p| p.exists())
+            .map(|p| p.to_string_lossy().into_owned())
+            .or_else(|| crate::pdf::engine::resolve_pdfium_lib_path().ok())
+            .ok_or_else(|| {
+                format!(
+                    "PDFium library '{lib_filename}' not found.\n\
+                     Searched resource_dir: {}\n\
+                     Run `cargo build` once to auto-download it.",
+                    resource_dir.display()
+                )
+            })?;
 
-            let lib_path = candidates
-                .into_iter()
-                .find(|p| p.exists())
-                .ok_or_else(|| {
-                    format!(
-                        "PDFium library '{}' not found.\n\
-                         Searched resource_dir: {}\n\
-                         Run `cargo build` once to auto-download it.",
-                        lib_filename,
-                        resource_dir.display()
-                    )
-                })?;
+            eprintln!("[WaffleMatrix] PDFium library resolved: {lib_path}");
 
-            let pdfium_lib_path = lib_path.to_string_lossy().into_owned();
-            eprintln!("[WaffleMatrix] PDFium library resolved: {pdfium_lib_path}");
-
-            app.manage(AppState::new(pdfium_lib_path));
+            app.manage(AppState::new(lib_path));
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

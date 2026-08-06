@@ -14,6 +14,10 @@ edition = "2021"
 name = "wafflematrix_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
+[[bin]]
+name = "wafflematrix-cli"
+path = "src/bin/cli.rs"
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
@@ -31,6 +35,7 @@ parking_lot = "0.12"
 lru = "0.12"
 rust_xlsxwriter = "0.97.1"
 similar = "2"
+clap = { version = "4", features = ["derive"] }
 
 [dev-dependencies]
 calamine = "0.26"

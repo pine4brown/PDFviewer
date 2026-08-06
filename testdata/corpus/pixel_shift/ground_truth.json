@@ -1,0 +1,11 @@
+{
+  "name": "pixel_shift",
+  "description": "All content translated by 2pt. Text must remain a match; visual alignment should cancel the shift.",
+  "pages": [
+    {
+      "page": 1,
+      "status": "match",
+      "regions": []
+    }
+  ]
+}

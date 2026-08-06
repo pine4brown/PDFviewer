@@ -1,0 +1,16 @@
+{
+  "name": "add_page",
+  "description": "New document gains an extra page at the end. Page 2 must be marked added.",
+  "pages": [
+    {
+      "page": 1,
+      "status": "match",
+      "regions": []
+    },
+    {
+      "page": 2,
+      "status": "added",
+      "regions": []
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "two_col_table_cell",
+  "description": "One cell value changes in a two-column table row.",
+  "pages": [
+    {
+      "page": 1,
+      "status": "modified",
+      "regions": [
+        {
+          "rect": [
+            72.0,
+            83.01001,
+            412.0,
+            94.04999
+          ],
+          "old_text": "ID2 20",
+          "new_text": "ID2 21"
+        }
+      ]
+    }
+  ]
+}

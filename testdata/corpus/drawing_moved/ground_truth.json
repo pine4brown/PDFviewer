@@ -1,0 +1,29 @@
+{
+  "name": "drawing_moved",
+  "description": "A filled rectangle moves horizontally. Text is unchanged; visual mode should flag the old and new positions.",
+  "pages": [
+    {
+      "page": 1,
+      "status": "modified",
+      "text_status": "match",
+      "regions": [
+        {
+          "rect": [
+            200.0,
+            281.89,
+            300.0,
+            341.89
+          ]
+        },
+        {
+          "rect": [
+            260.0,
+            281.89,
+            360.0,
+            341.89
+          ]
+        }
+      ]
+    }
+  ]
+}

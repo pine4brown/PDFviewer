@@ -1,0 +1,11 @@
+{
+  "name": "identical",
+  "description": "Two byte-identical text documents. All modes must report no differences.",
+  "pages": [
+    {
+      "page": 1,
+      "status": "match",
+      "regions": []
+    }
+  ]
+}

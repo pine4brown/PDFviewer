@@ -6,25 +6,15 @@ use pdfium_render::prelude::PdfPageObjectsCommon;
 
 /// Resolve the bundled PDFium shared library path used by tests.
 pub fn pdfium_lib_path() -> String {
-    let crate_dir = env!("CARGO_MANIFEST_DIR");
-    #[cfg(target_os = "macos")]
-    let name = "libpdfium.dylib";
-    #[cfg(target_os = "windows")]
-    let name = "pdfium.dll";
-    #[cfg(target_os = "linux")]
-    let name = "libpdfium.so";
-
-    std::path::Path::new(crate_dir)
-        .join("resources")
-        .join(name)
-        .to_string_lossy()
-        .into_owned()
+    wafflematrix_lib::pdf::engine::resolve_pdfium_lib_path()
+        .expect("PDFium library should be resolvable for tests")
 }
 
 /// Create a PDF at `path` with one A4 page containing the given lines of text.
 ///
 /// Lines are placed from top to bottom; each `(text, top)` pair uses `top` as
 /// the PDF y-coordinate of the text baseline (larger = higher on the page).
+#[allow(dead_code)]
 pub fn write_pdf_with_lines(path: &str, lines: &[(String, f32)]) -> Result<(), PdfiumError> {
     let pdfium = Pdfium::bind_to_library(&pdfium_lib_path())?;
     let pdfium = Pdfium::new(pdfium);

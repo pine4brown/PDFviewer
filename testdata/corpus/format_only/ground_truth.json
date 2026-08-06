@@ -1,0 +1,14 @@
+{
+  "name": "format_only",
+  "description": "Only the font size of the middle line changes. No textual difference; visual mode sees a change.",
+  "pages": [
+    {
+      "page": 1,
+      "status": "match",
+      "text_status": "match",
+      "visual_status": "modified",
+      "hybrid_status": "modified",
+      "regions": []
+    }
+  ]
+}

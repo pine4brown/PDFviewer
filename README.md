@@ -115,8 +115,8 @@ cargo run --bin wafflematrix-cli -- compare --old a.pdf --new b.pdf --output rep
 # 合成テストコーパスを再生成（testdata/corpus/）
 cargo run --bin wafflematrix-cli -- gen --force
 
-# 精度評価を実行（--min-f1未達でexit 1、CIゲートに使用）
-cargo run --bin wafflematrix-cli -- eval --min-f1 0.9
+# 精度評価を実行（--min-f1/--min-visual-f1未達でexit 1、CIゲートに使用）
+cargo run --bin wafflematrix-cli -- eval --min-f1 0.9 --min-visual-f1 0.85
 
 # 実PDFペアを"ゴールデン"ケースとして凍結（現在の出力をground truth化して回帰監視）
 cargo run --bin wafflematrix-cli -- golden --name sample_docs --old v1.pdf --new v2.pdf
@@ -131,14 +131,20 @@ cargo run --bin wafflematrix-cli -- golden --name sample_docs --old v1.pdf --new
 - **ページ分類精度**: ページ状態（match/modified/added/removed）の一致率
 - **誤検知ドキュメント数**: 全ページが変化なしと期待されるケースで差分を誤検出した数
 
+visual比較のアライメントは、まず**テキスト行座標**（PDFium抽出）でオフセットを推定し、
+テキストの無いページでは**位相相関＋MAD精緻化**へフォールバックします。これにより
+「図が移動した」ケースで無変更テキストを2重写しにしない頑健な整列と、
+サブピクセルシフト（2pt並進等）の相殺が両立します。現在の合成コーパス12件の
+visualモードは 領域F1=1.000・ページ分類精度=1.000・誤検知0 です（`eval --modes visual`）。
+
 `gen` の合成ケースは `src-tauri/src/bench/gen.rs` の `case_definitions()` に定義されており、
 シードから決定的に生成されます。**新しいテストケースの追加**は、同関数にケースを足し、
 `gen --force` で再生成するだけです。実PDFの回帰監視には `golden` サブコマンドを使います。
 
 ### CI
 GitHub Actions（`.github/workflows/ci.yml`）がpush/PR時に
-`cargo build` → `cargo test` → `gen --force` → `eval --min-f1 0.9` を実行し、
-テキスト差分精度のリグレッションを自動検出します。
+`cargo build` → `cargo test` → `gen --force` → `eval --min-f1 0.9 --min-visual-f1 0.85` を実行し、
+テキスト差分精度と図表・図形の領域検出精度のリグレッションを自動検出します。
 
 ## ライセンス
 LICENSE ファイルを参照してください。

@@ -322,8 +322,10 @@ pub fn case_definitions() -> Vec<(String, Vec<DocPage>, Vec<DocPage>, GroundTrut
         let mut new = old.clone();
         // Shift everything 2pt down-right. Text content is identical, so text
         // mode must still report a match; the visual alignment should absorb
-        // the translation.
+        // the translation. Note: lines are (text, x, y, font), so index 1 is
+        // the x coordinate and index 2 is the y coordinate.
         for l in &mut new.lines {
+            l.1 += 2.0;
             l.2 -= 2.0;
         }
         for r in &mut new.rects {

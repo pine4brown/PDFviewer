@@ -82,6 +82,9 @@ struct EvalArgs {
     /// Minimum text-content F1; the command fails when any mode is below it.
     #[arg(long, default_value_t = 0.0)]
     min_f1: f64,
+    /// Minimum visual region F1 (visual mode); the command fails when below.
+    #[arg(long)]
+    min_visual_f1: Option<f64>,
     /// Overlap threshold for rect matching (0..1, default 0.5).
     #[arg(long, default_value_t = 0.5)]
     threshold: f64,
@@ -252,6 +255,11 @@ fn cmd_eval(a: EvalArgs) -> Result<ExitCode, String> {
     if !(0.0..=1.0).contains(&a.min_f1) {
         return Err("--min-f1 must be in 0..=1".into());
     }
+    if let Some(v) = a.min_visual_f1 {
+        if !(0.0..=1.0).contains(&v) {
+            return Err("--min-visual-f1 must be in 0..=1".into());
+        }
+    }
     if !(0.0..=1.0).contains(&a.threshold) {
         return Err("--threshold must be in 0..=1".into());
     }
@@ -296,10 +304,29 @@ fn cmd_eval(a: EvalArgs) -> Result<ExitCode, String> {
                 "eval failed: text-content F1 {f1:.4} is below --min-f1 {:.4}",
                 a.min_f1
             );
-            Ok(ExitCode::from(1))
+            return Ok(ExitCode::from(1));
         }
-        _ => Ok(ExitCode::SUCCESS),
+        _ => {}
     }
+
+    // Gate on visual region F1 for the visual mode.
+    if let Some(min) = a.min_visual_f1 {
+        for m in &summary.by_mode {
+            if m.mode == "visual" {
+                if let Some(r) = &m.region {
+                    if r.f1 < min {
+                        eprintln!(
+                            "eval failed: visual region F1 {:.4} is below --min-visual-f1 {min:.4}",
+                            r.f1
+                        );
+                        return Ok(ExitCode::from(1));
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(ExitCode::SUCCESS)
 }
 
 // ---- gen --------------------------------------------------------------------

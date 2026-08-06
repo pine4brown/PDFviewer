@@ -39,9 +39,10 @@ jobs:
         run: cargo run --bin wafflematrix-cli -- gen --force
         working-directory: src-tauri
 
-      # Accuracy gate: fails the pipeline when text-content F1 drops below 0.9.
+      # Accuracy gates: fail when text-content F1 drops below 0.9 or visual
+      # region F1 below 0.85 (figure/table detection accuracy).
       - name: Evaluate diff accuracy
-        run: cargo run --bin wafflematrix-cli -- eval --min-f1 0.9 --ci --report ../testdata/eval-report.json
+        run: cargo run --bin wafflematrix-cli -- eval --min-f1 0.9 --min-visual-f1 0.85 --ci --report ../testdata/eval-report.json
         working-directory: src-tauri
 
       - name: Upload eval report

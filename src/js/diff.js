@@ -1,35 +1,13 @@
-/* ==========================================================================
-   WaffleMatrix PDF Viewer — Diff Panel
-   Two-file PDF comparison UI, 1-to-1 visual diff, and report export.
-   ========================================================================== */
-
 import {
   comparePdfs,
   exportDiff,
   openFileDialog,
   saveDiffDialog,
-  renderPageFromPath,
 } from './commands.js';
 import { t } from './i18n.js';
-
-const KIND_CLASS = {
-  added: 'diff__kind--added',
-  removed: 'diff__kind--removed',
-  modified: 'diff__kind--modified',
-};
-
-const KIND_LABEL = {
-  added: 'Added',
-  removed: 'Removed',
-  modified: 'Modified',
-};
-
-const STATUS_LABEL = {
-  added: 'Added page',
-  removed: 'Removed page',
-  modified: 'Modified',
-  match: 'Match',
-};
+import { DiffRecentPairs } from './diff/DiffRecentPairs.js';
+import { DiffVisualView } from './diff/DiffVisualView.js';
+import { DiffTableView } from './diff/DiffTableView.js';
 
 export class DiffPanel {
   /**
@@ -48,61 +26,88 @@ export class DiffPanel {
     this.backBtn = document.querySelector('#btn-diff-back');
     this.messageEl = document.querySelector('#diff-message');
     this.resultsEl = document.querySelector('#diff-results');
-    this.summaryEl = document.querySelector('#diff-summary');
-    this.pageListEl = document.querySelector('#diff-page-list');
 
-    // Toolbar & Table View Controls
+    // Tab Switcher Buttons
     this.btnViewTable = document.querySelector('#btn-view-table');
     this.btnViewVisual = document.querySelector('#btn-view-visual');
     this.tableSection = document.querySelector('#diff-table-section');
     this.visualWorkspace = document.querySelector('#diff-visual-workspace');
 
-    this.searchInput = document.querySelector('#diff-search-input');
-    this.filterBtns = document.querySelectorAll('#diff-filters .diff__filter-btn');
-    this.expandAllBtn = document.querySelector('#btn-diff-expand-all');
-    this.collapseAllBtn = document.querySelector('#btn-diff-collapse-all');
-    this.countAllEl = document.querySelector('#count-all');
-    this.countModifiedEl = document.querySelector('#count-modified');
-    this.countAddedEl = document.querySelector('#count-added');
-    this.countRemovedEl = document.querySelector('#count-removed');
+    // Initialize Recent Pairs Submodule
+    this.recentPairs = new DiffRecentPairs({
+      container: document.querySelector('#diff-recent-container'),
+      chips: document.querySelector('#diff-recent-chips'),
+      loadLastBtn: document.querySelector('#btn-diff-load-last'),
+      oldPathInput: this.oldPath,
+      newPathInput: this.newPath,
+    });
 
-    // 1-to-1 Visual Viewport Controls
-    this.pageSelect = document.querySelector('#diff-visual-page-select');
-    this.prevDiffBtn = document.querySelector('#btn-visual-prev-diff');
-    this.nextDiffBtn = document.querySelector('#btn-visual-next-diff');
-    this.zoomOutBtn = document.querySelector('#btn-visual-zoom-out');
-    this.zoomInBtn = document.querySelector('#btn-visual-zoom-in');
-    this.zoomLevelEl = document.querySelector('#visual-zoom-level');
-    this.viewportOld = document.querySelector('#viewport-old');
-    this.viewportNew = document.querySelector('#viewport-new');
-    this.stageOld = document.querySelector('#stage-old');
-    this.stageNew = document.querySelector('#stage-new');
-    this.svgOld = document.querySelector('#svg-overlay-old');
-    this.svgNew = document.querySelector('#svg-overlay-new');
-    this.canvasOld = document.querySelector('#canvas-visual-old');
-    this.canvasNew = document.querySelector('#canvas-visual-new');
+    // Initialize Table View Submodule
+    this.tableView = new DiffTableView({
+      pageListEl: document.querySelector('#diff-page-list'),
+      summaryEl: document.querySelector('#diff-summary'),
+      countAllEl: document.querySelector('#count-all'),
+      countModifiedEl: document.querySelector('#count-modified'),
+      countAddedEl: document.querySelector('#count-added'),
+      countRemovedEl: document.querySelector('#count-removed'),
+      expandAllBtn: document.querySelector('#btn-diff-expand-all'),
+      collapseAllBtn: document.querySelector('#btn-diff-collapse-all'),
+      searchInput: document.querySelector('#diff-search-input'),
+      filterBtns: document.querySelectorAll('#diff-filters .diff__filter-btn'),
+    }, {
+      onFilterChange: (filter) => {
+        // Sync filter to table view (already handled internally in tableView)
+      }
+    });
 
-    // Recent Pairs Controls
-    this.recentContainerEl = document.querySelector('#diff-recent-container');
-    this.recentChipsEl = document.querySelector('#diff-recent-chips');
-    this.loadLastPairBtn = document.querySelector('#btn-diff-load-last');
+    // Initialize Visual View Submodule
+    this.visualView = new DiffVisualView({
+      pageSelect: document.querySelector('#diff-visual-page-select'),
+      prevDiffBtn: document.querySelector('#btn-visual-prev-diff'),
+      nextDiffBtn: document.querySelector('#btn-visual-next-diff'),
+      zoomOutBtn: document.querySelector('#btn-visual-zoom-out'),
+      zoomInBtn: document.querySelector('#btn-visual-zoom-in'),
+      zoomLevelEl: document.querySelector('#visual-zoom-level'),
+      viewportOld: document.querySelector('#viewport-old'),
+      viewportNew: document.querySelector('#viewport-new'),
+      stageOld: document.querySelector('#stage-old'),
+      stageNew: document.querySelector('#stage-new'),
+      svgOld: document.querySelector('#svg-overlay-old'),
+      svgNew: document.querySelector('#svg-overlay-new'),
+      canvasOld: document.querySelector('#canvas-visual-old'),
+      canvasNew: document.querySelector('#canvas-visual-new'),
+    }, {
+      onStepDiff: (direction) => this._stepVisualDiff(direction)
+    });
+
+    // Set callback link
+    this.visualView.onPageSelectChange = (pageIdx) => {
+      this.visualView.renderVisualPage(pageIdx, this.report, this.flatDiffList, this.activeDiffIndex);
+    };
+
+    // Progress Bar Elements
+    this.progressContainer = document.querySelector('#diff-progress-container');
+    this.progressBar = document.querySelector('#diff-progress-bar');
+    this.progressText = document.querySelector('#diff-progress-text');
+    this._unlistenProgress = null;
+
+    if (window.__TAURI__?.event?.listen) {
+      window.__TAURI__.event.listen('diff:progress', (event) => {
+        const percent = event.payload;
+        this._updateProgress(percent);
+      }).then((unlisten) => {
+        this._unlistenProgress = unlisten;
+      });
+    }
 
     /** @type {object|null} */
     this.report = null;
-    this.activeFilter = 'all';
-    this.searchQuery = '';
     this.activeViewMode = 'table';
-    this.visualZoomScale = 1.0;
-    this.currentVisualPageIndex = 0;
     this.flatDiffList = [];
     this.activeDiffIndex = 0;
-    this._isSyncingScroll = false;
-    this._renderVisualTaskId = 0;
 
     this._bindEvents();
   }
-
-  // ---------- Public API ----------
 
   get isOpen() {
     return !this.el.hidden;
@@ -116,7 +121,7 @@ export class DiffPanel {
     if (viewerMain) viewerMain.hidden = true;
 
     this.el.hidden = false;
-    this._loadRecentPairs(true); // Load pairs and auto-fill if fields are empty
+    this.recentPairs.loadRecentPairs(true);
   }
 
   close() {
@@ -133,8 +138,6 @@ export class DiffPanel {
       this.viewer.showWelcome();
     }
   }
-
-  // ---------- Private ----------
 
   _bindEvents() {
     document.querySelector('#btn-diff-old')?.addEventListener('click', async () => {
@@ -154,70 +157,8 @@ export class DiffPanel {
       btn.addEventListener('click', () => this._export(btn.dataset.export));
     });
 
-    // View Switcher Tabs
     this.btnViewTable?.addEventListener('click', () => this._switchView('table'));
     this.btnViewVisual?.addEventListener('click', () => this._switchView('visual'));
-
-    // Filter tabs
-    this.filterBtns?.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const filter = btn.dataset.filter;
-        this.filterBtns.forEach((b) => {
-          const isActive = b === btn;
-          b.classList.toggle('is-active', isActive);
-          b.setAttribute('aria-selected', isActive ? 'true' : 'false');
-        });
-        this.activeFilter = filter;
-        this._applyFilter();
-      });
-    });
-
-    // Search input
-    this.searchInput?.addEventListener('input', (e) => {
-      this.searchQuery = (e.target.value || '').trim().toLowerCase();
-      this._applyFilter();
-    });
-
-    // Accordion controls
-    this.expandAllBtn?.addEventListener('click', () => this._toggleAllPages(true));
-    this.collapseAllBtn?.addEventListener('click', () => this._toggleAllPages(false));
-
-    // Recent Pair button
-    this.loadLastPairBtn?.addEventListener('click', () => this._loadLastPair());
-
-    // 1-to-1 Visual View Controls
-    this.pageSelect?.addEventListener('change', (e) => {
-      const pageIdx = parseInt(e.target.value, 10);
-      this._renderVisualPage(pageIdx);
-    });
-
-    this.prevDiffBtn?.addEventListener('click', () => this._stepVisualDiff(-1));
-    this.nextDiffBtn?.addEventListener('click', () => this._stepVisualDiff(1));
-    this.zoomOutBtn?.addEventListener('click', () => this._setVisualZoom(this.visualZoomScale - 0.2));
-    this.zoomInBtn?.addEventListener('click', () => this._setVisualZoom(this.visualZoomScale + 0.2));
-
-    // Synchronized scroll between Left (Old) and Right (New) viewports
-    this._bindViewportSyncScroll();
-  }
-
-  _bindViewportSyncScroll() {
-    const syncScroll = (source, target) => {
-      if (this._isSyncingScroll) return;
-      this._isSyncingScroll = true;
-      target.scrollTop = source.scrollTop;
-      target.scrollLeft = source.scrollLeft;
-      requestAnimationFrame(() => {
-        this._isSyncingScroll = false;
-      });
-    };
-
-    this.viewportOld?.addEventListener('scroll', () => {
-      if (this.viewportNew) syncScroll(this.viewportOld, this.viewportNew);
-    });
-
-    this.viewportNew?.addEventListener('scroll', () => {
-      if (this.viewportOld) syncScroll(this.viewportNew, this.viewportOld);
-    });
   }
 
   _switchView(viewMode) {
@@ -238,7 +179,8 @@ export class DiffPanel {
     if (this.visualWorkspace) this.visualWorkspace.hidden = isTable;
 
     if (!isTable && this.report) {
-      this._renderVisualWorkspace();
+      this.visualView.renderVisualWorkspace(this.report);
+      this.visualView.renderVisualPage(this.visualView.currentVisualPageIndex, this.report, this.flatDiffList, this.activeDiffIndex);
     }
   }
 
@@ -253,18 +195,19 @@ export class DiffPanel {
 
     this.runBtn.disabled = true;
     this._setMessage(t('diff.comparing'));
+    this._showProgress(true);
 
     try {
       const res = await comparePdfs(oldPath, newPath, this.modeSelect.value);
       if (!res?.ok) {
         this._setMessage(res?.message || t('diff.errorRun'), true);
+        this._showProgress(false);
         return;
       }
       this.report = res.report;
-      this._saveRecentPair(oldPath, newPath);
+      this.recentPairs.saveRecentPair(oldPath, newPath);
       this._render(res.report);
 
-      // Auto switch view tab for Visual or Hybrid comparison modes
       if (this.modeSelect.value === 'visual' || this.modeSelect.value === 'hybrid') {
         this._switchView('visual');
       } else {
@@ -277,6 +220,7 @@ export class DiffPanel {
       this._setMessage(`${t('diff.errorRun')}: ${err.message || err}`, true);
     } finally {
       this.runBtn.disabled = false;
+      this._showProgress(false);
     }
   }
 
@@ -300,12 +244,6 @@ export class DiffPanel {
   _render(report) {
     this.resultsEl.hidden = false;
 
-    const s = report.stats || {};
-    const totalChanges = report.total_changes ?? 0;
-    const addedCount = s.added_entries ?? 0;
-    const removedCount = s.removed_entries ?? 0;
-    const modifiedCount = s.modified_entries ?? 0;
-
     // Build flat list of all diffs for 1-to-1 navigation
     this.flatDiffList = [];
     (report.pages || []).forEach((page) => {
@@ -316,352 +254,20 @@ export class DiffPanel {
       });
     });
 
-    // Update filter badges
-    if (this.countAllEl) this.countAllEl.textContent = String(totalChanges);
-    if (this.countModifiedEl) this.countModifiedEl.textContent = String(modifiedCount);
-    if (this.countAddedEl) this.countAddedEl.textContent = String(addedCount);
-    if (this.countRemovedEl) this.countRemovedEl.textContent = String(removedCount);
-
-    this.summaryEl.textContent = t('diff.summary', {
-      total: totalChanges,
-      pages: report.pages?.length ?? 0,
-      added: addedCount,
-      removed: removedCount,
-      modified: modifiedCount,
-    });
-
-    this.pageListEl.innerHTML = '';
-
-    const pages = report.pages || [];
-    let processedPages = 0;
-
-    for (let pageIdx = 0; pageIdx < pages.length; pageIdx++) {
-      const page = pages[pageIdx];
-      const changes = (page.entries || []).filter((e) => e.is_change !== false && e.kind !== 'unchanged');
-      if (page.status === 'match' && changes.length === 0) continue;
-
-      processedPages++;
-      const section = document.createElement('details');
-      section.className = 'diff__page';
-      section.open = totalChanges <= 12 || processedPages <= 3;
-
-      const statusLabel = STATUS_LABEL[page.status] || page.status;
-      const summary = document.createElement('summary');
-      summary.className = `diff__page-summary diff__status--${page.status || 'match'}`;
-      summary.innerHTML = `
-        <span class="diff__page-no">${t('diff.page', { page: page.page_index + 1 })}</span>
-        <span class="diff__page-status">${statusLabel}</span>
-        <span class="diff__page-count">${changes.length} ${t('diff.changes')}</span>
-      `;
-      section.appendChild(summary);
-
-      const table = document.createElement('table');
-      table.className = 'diff__table';
-      const thead = document.createElement('thead');
-      thead.innerHTML = `<tr>
-        <th>${t('diff.kind')}</th>
-        <th>${t('diff.line')}</th>
-        <th>${t('diff.oldText')}</th>
-        <th>${t('diff.newText')}</th>
-        <th>${t('diff.region')}</th>
-      </tr>`;
-      table.appendChild(thead);
-
-      const tbody = document.createElement('tbody');
-      for (const entry of changes) {
-        const tr = document.createElement('tr');
-        const kind = entry.kind || 'modified';
-        const line = entry.old_line ?? entry.new_line;
-        const region = entry.visual_rects?.length
-          ? `${entry.visual_rects.length}`
-          : '—';
-
-        tr.dataset.kind = kind;
-        tr.dataset.search = `${entry.old_text || ''} ${entry.new_text || ''}`.toLowerCase();
-
-        // Clicking a row in table jumps to 1-to-1 visual view
-        tr.style.cursor = 'pointer';
-        tr.addEventListener('click', () => {
-          const diffIdx = this.flatDiffList.findIndex((item) => item.entry === entry);
-          if (diffIdx >= 0) {
-            this.activeDiffIndex = diffIdx;
-          }
-          this.currentVisualPageIndex = page.page_index;
-          this._switchView('visual');
-        });
-
-        const { oldHtml, newHtml } = this._formatInlineDiff(entry.old_text || '', entry.new_text || '', kind);
-
-        tr.innerHTML = `
-          <td><span class="diff__kind ${KIND_CLASS[kind] || ''}">${KIND_LABEL[kind] || kind}</span></td>
-          <td class="diff__line">${line != null ? line + 1 : '—'}</td>
-          <td class="diff__text">${oldHtml}</td>
-          <td class="diff__text">${newHtml}</td>
-          <td class="diff__region">${region}</td>
-        `;
-        tbody.appendChild(tr);
+    const onRowSelectCallback = (pageIdx, entry) => {
+      const diffIdx = this.flatDiffList.findIndex((item) => item.entry === entry);
+      if (diffIdx >= 0) {
+        this.activeDiffIndex = diffIdx;
       }
-      table.appendChild(tbody);
-      section.appendChild(table);
+      this.visualView.currentVisualPageIndex = pageIdx;
+      this._switchView('visual');
+    };
 
-      this.pageListEl.appendChild(section);
-    }
-
-    if (!this.pageListEl.children.length) {
-      this.pageListEl.innerHTML = `<p class="diff__empty">${t('diff.noChanges')}</p>`;
-    } else {
-      this._applyFilter();
-    }
+    // Delegate rendering to TableView Submodule
+    this.tableView.renderTable(report, onRowSelectCallback);
 
     // Build Page Select Dropdown for Visual Workspace
-    if (this.pageSelect) {
-      this.pageSelect.innerHTML = '';
-      pages.forEach((p) => {
-        const changeCount = (p.entries || []).filter((e) => e.is_change !== false && e.kind !== 'unchanged').length;
-        const opt = document.createElement('option');
-        opt.value = String(p.page_index);
-        opt.textContent = t('diff.page', { page: p.page_index + 1 }) + (changeCount > 0 ? ` (${changeCount})` : '');
-        this.pageSelect.appendChild(opt);
-      });
-    }
-  }
-
-  // ---------- 1-to-1 Side-by-Side Visual Workspace Logic ----------
-
-  _renderVisualWorkspace() {
-    if (!this.report || !this.report.pages?.length) return;
-    this.pageSelect.value = String(this.currentVisualPageIndex);
-    this._renderVisualPage(this.currentVisualPageIndex);
-  }
-
-  async _renderVisualPage(pageIdx) {
-    const currentTaskId = ++this._renderVisualTaskId;
-    this.currentVisualPageIndex = pageIdx;
-    const page = (this.report?.pages || []).find((p) => p.page_index === pageIdx);
-    if (!page) return;
-
-    // Clear SVG overlays
-    if (this.svgOld) this.svgOld.innerHTML = '';
-    if (this.svgNew) this.svgNew.innerHTML = '';
-
-    const oldPath = this.report.old.path;
-    const newPath = this.report.new.path;
-    const oldPageCount = this.report.old.page_count;
-    const newPageCount = this.report.new.page_count;
-
-    // Default dimensions as fallback
-    let oldWidth = 600;
-    let oldHeight = 800;
-    let newWidth = 600;
-    let newHeight = 800;
-
-    let hasOld = pageIdx < oldPageCount;
-    let hasNew = pageIdx < newPageCount;
-
-    // Load actual rendered images asynchronously
-    let oldPromise = null;
-    let newPromise = null;
-
-    // Use zoom = 1.5 for high-fidelity comparison view
-    const renderZoom = 1.5;
-
-    if (hasOld) {
-      oldPromise = renderPageFromPath(oldPath, pageIdx, renderZoom).catch(err => {
-        console.error('[Diff] Failed to render old page:', err);
-        return null;
-      });
-    }
-    if (hasNew) {
-      newPromise = renderPageFromPath(newPath, pageIdx, renderZoom).catch(err => {
-        console.error('[Diff] Failed to render new page:', err);
-        return null;
-      });
-    }
-
-    const [oldRes, newRes] = await Promise.all([oldPromise, newPromise]);
-
-    // Check race condition
-    if (currentTaskId !== this._renderVisualTaskId) return;
-
-    if (oldRes) {
-      oldWidth = oldRes.width;
-      oldHeight = oldRes.height;
-      this._drawImageToCanvas(this.canvasOld, oldRes.image_data, oldWidth, oldHeight, currentTaskId);
-    } else {
-      this._drawPlaceholderCanvas(this.canvasOld, hasOld ? 'Failed to Load' : 'Page Deleted (N/A)', '#fee2e2');
-    }
-
-    if (newRes) {
-      newWidth = newRes.width;
-      newHeight = newRes.height;
-      this._drawImageToCanvas(this.canvasNew, newRes.image_data, newWidth, newHeight, currentTaskId);
-    } else {
-      this._drawPlaceholderCanvas(this.canvasNew, hasNew ? 'Failed to Load' : 'Page Added (N/A)', '#dcfce7');
-    }
-
-    // Adjust stage and SVG viewBox sizes
-    if (this.stageOld) {
-      this.stageOld.style.width = `${oldWidth}px`;
-      this.stageOld.style.height = `${oldHeight}px`;
-    }
-    if (this.svgOld) {
-      this.svgOld.setAttribute('viewBox', `0 0 ${oldWidth} ${oldHeight}`);
-    }
-
-    if (this.stageNew) {
-      this.stageNew.style.width = `${newWidth}px`;
-      this.stageNew.style.height = `${newHeight}px`;
-    }
-    if (this.svgNew) {
-      this.svgNew.setAttribute('viewBox', `0 0 ${newWidth} ${newHeight}`);
-    }
-
-    // Create SVG overlay rects for visual diffs
-    const entries = (page.entries || []).filter((e) => e.is_change !== false && e.kind !== 'unchanged');
-    let activeRect = null;
-
-    entries.forEach((entry, idx) => {
-      const isCurrentActive = this.flatDiffList[this.activeDiffIndex]?.entry === entry;
-
-      // Draw Old Bounding Box (Deletions / Baseline rect)
-      const oldR = entry.old_rect;
-      if (oldR && hasOld) {
-        this._appendSvgRect(this.svgOld, oldR, 'diff__rect--del', isCurrentActive);
-      }
-
-      // Draw New Bounding Box (Additions / Visual rects)
-      const newR = entry.new_rect;
-      if (newR && hasNew) {
-        this._appendSvgRect(this.svgNew, newR, 'diff__rect--add', isCurrentActive);
-      }
-
-      for (const vRect of entry.visual_rects || []) {
-        if (hasNew) {
-          this._appendSvgRect(this.svgNew, vRect, 'diff__rect--add', isCurrentActive);
-        }
-      }
-
-      if (isCurrentActive) {
-        activeRect = oldR || newR || (entry.visual_rects && entry.visual_rects[0]);
-      }
-    });
-
-    this._setVisualZoom(this.visualZoomScale);
-
-    if (activeRect) {
-      setTimeout(() => {
-        if (currentTaskId === this._renderVisualTaskId) {
-          this._scrollToRect(activeRect);
-        }
-      }, 100);
-    }
-  }
-
-  _drawImageToCanvas(canvas, base64Data, width, height, taskId) {
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const img = new Image();
-    img.onload = () => {
-      if (taskId !== this._renderVisualTaskId) return;
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      ctx.drawImage(img, 0, 0);
-    };
-    img.src = `data:image/png;base64,${base64Data}`;
-  }
-
-  _appendSvgRect(svgElement, rect, className, isActive) {
-    if (!svgElement || !rect) return;
-    const svgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    
-    // Convert point coordinates to viewport px
-    const left = rect.left;
-    const top = rect.top;
-    const width = Math.max(rect.right - rect.left, 8);
-    const height = Math.max(rect.bottom - rect.top, 8);
-
-    svgRect.setAttribute('x', String(left));
-    svgRect.setAttribute('y', String(top));
-    svgRect.setAttribute('width', String(width));
-    svgRect.setAttribute('height', String(height));
-    svgRect.setAttribute('rx', '3');
-    svgRect.setAttribute('class', `diff__rect ${className} ${isActive ? 'diff__rect--active' : ''}`);
-
-    svgElement.appendChild(svgRect);
-  }
-
-  _scrollToRect(rect) {
-    if (!rect) return;
-    const viewport = this.viewportNew || this.viewportOld;
-    if (!viewport) return;
-
-    // Convert coordinates to screen pixels under the current zoom scale
-    const scale = this.visualZoomScale;
-    
-    // PDF points coordinates (origin top-left)
-    const rectX = rect.left * scale;
-    const rectY = rect.top * scale;
-    const rectW = (rect.right - rect.left) * scale;
-    const rectH = (rect.bottom - rect.top) * scale;
-
-    // Viewport size
-    const vpWidth = viewport.clientWidth;
-    const vpHeight = viewport.clientHeight;
-
-    // Target scroll positions to center the rect in viewport
-    const scrollX = rectX - (vpWidth - rectW) / 2;
-    const scrollY = rectY - (vpHeight - rectH) / 2;
-
-    // Scroll both viewports (they are synced, but let's scroll one of them)
-    viewport.scrollTo({
-      left: Math.max(0, scrollX),
-      top: Math.max(0, scrollY),
-      behavior: 'smooth'
-    });
-  }
-
-  _drawPlaceholderCanvas(canvas, label, bgColor) {
-    if (!canvas) return;
-    canvas.width = 600;
-    canvas.height = 800;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    ctx.fillStyle = bgColor;
-    ctx.fillRect(0, 0, 600, 800);
-
-    // Subtle document grid pattern
-    ctx.strokeStyle = '#e2e8f0';
-    ctx.lineWidth = 1;
-    for (let x = 40; x < 600; x += 40) {
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, 800);
-      ctx.stroke();
-    }
-    for (let y = 40; y < 800; y += 40) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(600, y);
-      ctx.stroke();
-    }
-
-    ctx.fillStyle = '#64748b';
-    ctx.font = 'bold 16px sans-serif';
-    ctx.fillText(label, 40, 50);
-  }
-
-  _setVisualZoom(scale) {
-    this.visualZoomScale = Math.max(0.5, Math.min(2.5, scale));
-    if (this.zoomLevelEl) {
-      this.zoomLevelEl.textContent = `${Math.round(this.visualZoomScale * 100)}%`;
-    }
-
-    const transformStr = `scale(${this.visualZoomScale})`;
-    if (this.stageOld) this.stageOld.style.transform = transformStr;
-    if (this.stageNew) this.stageNew.style.transform = transformStr;
+    this.visualView.buildPageSelect(report.pages || []);
   }
 
   _stepVisualDiff(direction) {
@@ -670,117 +276,9 @@ export class DiffPanel {
     const targetItem = this.flatDiffList[this.activeDiffIndex];
 
     if (targetItem) {
-      this._renderVisualPage(targetItem.pageIndex);
+      this.visualView.renderVisualPage(targetItem.pageIndex, this.report, this.flatDiffList, this.activeDiffIndex);
+      this.visualView.pageSelect.value = String(targetItem.pageIndex);
     }
-  }
-
-  _applyFilter() {
-    const pages = this.pageListEl.querySelectorAll('.diff__page');
-    let totalVisibleRows = 0;
-
-    pages.forEach((pageEl) => {
-      const rows = pageEl.querySelectorAll('tbody tr');
-      let pageVisibleRows = 0;
-
-      rows.forEach((tr) => {
-        const kind = tr.dataset.kind;
-        const searchText = tr.dataset.search || '';
-
-        const matchesKind = this.activeFilter === 'all' || kind === this.activeFilter;
-        const matchesSearch = !this.searchQuery || searchText.includes(this.searchQuery);
-
-        if (matchesKind && matchesSearch) {
-          tr.classList.remove('diff__row--hidden');
-          pageVisibleRows++;
-        } else {
-          tr.classList.add('diff__row--hidden');
-        }
-      });
-
-      if (pageVisibleRows > 0) {
-        pageEl.classList.remove('diff__page--hidden');
-        totalVisibleRows += pageVisibleRows;
-      } else {
-        pageEl.classList.add('diff__page--hidden');
-      }
-    });
-
-    let emptyNotice = this.pageListEl.querySelector('.diff__no-matches');
-    if (totalVisibleRows === 0 && pages.length > 0) {
-      if (!emptyNotice) {
-        emptyNotice = document.createElement('p');
-        emptyNotice.className = 'diff__empty diff__no-matches';
-        emptyNotice.textContent = t('diff.noMatches');
-        this.pageListEl.appendChild(emptyNotice);
-      } else {
-        emptyNotice.hidden = false;
-      }
-    } else if (emptyNotice) {
-      emptyNotice.hidden = true;
-    }
-  }
-
-  _toggleAllPages(openState) {
-    this.pageListEl.querySelectorAll('.diff__page').forEach((el) => {
-      if (!el.classList.contains('diff__page--hidden')) {
-        el.open = openState;
-      }
-    });
-  }
-
-  _formatInlineDiff(oldText, newText, kind) {
-    const oldEsc = this._esc(oldText);
-    const newEsc = this._esc(newText);
-
-    if (kind === 'removed') {
-      return {
-        oldHtml: `<span class="diff__del">${oldEsc}</span>`,
-        newHtml: '',
-      };
-    }
-    if (kind === 'added') {
-      return {
-        oldHtml: '',
-        newHtml: `<span class="diff__add">${newEsc}</span>`,
-      };
-    }
-    if (kind === 'modified') {
-      return this._computeWordDiff(oldText, newText);
-    }
-
-    return { oldHtml: oldEsc, newHtml: newEsc };
-  }
-
-  _computeWordDiff(oldText, newText) {
-    const oldWords = oldText.split(/(\s+)/);
-    const newWords = newText.split(/(\s+)/);
-
-    const oldSet = new Set(oldWords.map((w) => w.trim()).filter(Boolean));
-    const newSet = new Set(newWords.map((w) => w.trim()).filter(Boolean));
-
-    let oldHtml = oldWords
-      .map((w) => {
-        const trimmed = w.trim();
-        const esc = this._esc(w);
-        if (trimmed && !newSet.has(trimmed)) {
-          return `<span class="diff__del">${esc}</span>`;
-        }
-        return esc;
-      })
-      .join('');
-
-    let newHtml = newWords
-      .map((w) => {
-        const trimmed = w.trim();
-        const esc = this._esc(w);
-        if (trimmed && !oldSet.has(trimmed)) {
-          return `<span class="diff__add">${esc}</span>`;
-        }
-        return esc;
-      })
-      .join('');
-
-    return { oldHtml, newHtml };
   }
 
   _setMessage(text, isError = false) {
@@ -788,111 +286,21 @@ export class DiffPanel {
     this.messageEl.classList.toggle('diff__message--error', isError);
   }
 
-  _esc(text) {
-    return String(text)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
-  }
-
-  // ---------- Recent Comparisons Helper Methods ----------
-
-  _loadRecentPairs(autoFill = false) {
-    try {
-      const stored = localStorage.getItem('wafflematrix-recent-diff-pairs');
-      const pairs = stored ? JSON.parse(stored) : [];
-
-      if (!pairs || pairs.length === 0) {
-        if (this.recentContainerEl) this.recentContainerEl.hidden = true;
-        if (this.loadLastPairBtn) this.loadLastPairBtn.hidden = true;
-        return;
-      }
-
-      if (this.recentContainerEl) this.recentContainerEl.hidden = false;
-      if (this.loadLastPairBtn) this.loadLastPairBtn.hidden = false;
-
-      // Auto fill if input fields are empty
-      if (autoFill && pairs[0]) {
-        if (!this.oldPath.value) this.oldPath.value = pairs[0].oldPath;
-        if (!this.newPath.value) this.newPath.value = pairs[0].newPath;
-      }
-
-      // Render recent chips
-      if (this.recentChipsEl) {
-        this.recentChipsEl.innerHTML = '';
-        pairs.forEach((pair) => {
-          const chip = document.createElement('button');
-          chip.type = 'button';
-          chip.className = 'diff__recent-chip';
-          chip.title = `${pair.oldPath} ↔ ${pair.newPath}`;
-
-          const oldName = this._getFilename(pair.oldPath);
-          const newName = this._getFilename(pair.newPath);
-
-          chip.innerHTML = `
-            <span>${this._esc(oldName)}</span>
-            <span class="diff__recent-chip-arrow">↔</span>
-            <span>${this._esc(newName)}</span>
-          `;
-
-          chip.addEventListener('click', () => {
-            this.oldPath.value = pair.oldPath;
-            this.newPath.value = pair.newPath;
-          });
-
-          this.recentChipsEl.appendChild(chip);
-        });
-      }
-    } catch (err) {
-      console.warn('[Diff] Failed to load recent pairs:', err);
+  _updateProgress(percent) {
+    if (this.progressBar) {
+      this.progressBar.style.width = `${percent}%`;
+    }
+    if (this.progressText) {
+      this.progressText.textContent = `${percent}%`;
     }
   }
 
-  _saveRecentPair(oldPath, newPath) {
-    if (!oldPath || !newPath) return;
-    try {
-      const stored = localStorage.getItem('wafflematrix-recent-diff-pairs');
-      let pairs = stored ? JSON.parse(stored) : [];
-
-      // Filter out existing exact pair to avoid duplicates
-      pairs = pairs.filter(
-        (p) => !(p.oldPath === oldPath && p.newPath === newPath)
-      );
-
-      // Add to front
-      pairs.unshift({
-        oldPath,
-        newPath,
-        timestamp: new Date().toISOString(),
-      });
-
-      // Limit to max 5 pairs
-      if (pairs.length > 5) pairs.length = 5;
-
-      localStorage.setItem('wafflematrix-recent-diff-pairs', JSON.stringify(pairs));
-      this._loadRecentPairs(false);
-    } catch (err) {
-      console.warn('[Diff] Failed to save recent pair:', err);
+  _showProgress(visible) {
+    if (this.progressContainer) {
+      this.progressContainer.hidden = !visible;
     }
-  }
-
-  _loadLastPair() {
-    try {
-      const stored = localStorage.getItem('wafflematrix-recent-diff-pairs');
-      const pairs = stored ? JSON.parse(stored) : [];
-      if (pairs && pairs[0]) {
-        this.oldPath.value = pairs[0].oldPath;
-        this.newPath.value = pairs[0].newPath;
-      }
-    } catch (err) {
-      console.warn('[Diff] Failed to load last pair:', err);
+    if (visible) {
+      this._updateProgress(0);
     }
-  }
-
-  _getFilename(pathStr) {
-    if (!pathStr) return '';
-    const parts = pathStr.split(/[/\\]/);
-    return parts[parts.length - 1] || pathStr;
   }
 }

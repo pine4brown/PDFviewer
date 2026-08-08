@@ -1,10 +1,10 @@
 //! Diff-related Tauri commands — comparing PDFs and exporting reports.
 
 use serde::{Deserialize, Serialize};
-use tauri::State;
+use tauri::{State, Emitter};
 use tauri_plugin_dialog::DialogExt;
 
-use crate::diff::loader::compare_pdf_files;
+use crate::diff::loader::compare_pdf_files_with_progress;
 use crate::diff::report::DiffMode;
 use crate::state::AppState;
 
@@ -35,6 +35,7 @@ pub struct CompareResponse {
 /// never crosses a thread boundary.
 #[tauri::command]
 pub async fn compare_pdfs(
+    app: tauri::AppHandle,
     args: CompareArgs,
     state: State<'_, AppState>,
 ) -> Result<CompareResponse, String> {
@@ -47,7 +48,18 @@ pub async fn compare_pdfs(
     }
 
     let mode = DiffMode::from_str(&args.mode);
-    let report = compare_pdf_files(&state.pdfium_lib_path, &args.old_path, &args.new_path, mode)?;
+    
+    let app_clone = app.clone();
+    let report = compare_pdf_files_with_progress(
+        &state.pdfium_lib_path,
+        &args.old_path,
+        &args.new_path,
+        mode,
+        move |progress| {
+            let percent = (progress * 100.0) as u32;
+            let _ = app_clone.emit("diff:progress", percent);
+        }
+    )?;
 
     *state.diff_report.lock() = Some(report.clone());
 

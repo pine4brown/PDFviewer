@@ -23,11 +23,28 @@ pub fn compare_pdf_files(
     new_path: &str,
     mode: DiffMode,
 ) -> Result<DiffReport, String> {
+    compare_pdf_files_with_progress(pdfium_lib_path, old_path, new_path, mode, |_| {})
+}
+
+/// Compare two PDF files with a progress callback.
+pub fn compare_pdf_files_with_progress<F>(
+    pdfium_lib_path: &str,
+    old_path: &str,
+    new_path: &str,
+    mode: DiffMode,
+    mut progress_callback: F,
+) -> Result<DiffReport, String>
+where
+    F: FnMut(f32),
+{
+    progress_callback(0.05); // 5%
     let pdfium = bind_pdfium(pdfium_lib_path)?;
 
+    progress_callback(0.10); // 10%
     let old_bytes = read_pdf_bytes(old_path)?;
     let new_bytes = read_pdf_bytes(new_path)?;
 
+    progress_callback(0.15); // 15%
     let old_doc = pdfium
         .load_pdf_from_byte_slice(&old_bytes, None)
         .map_err(|e| format!("Cannot parse old PDF '{old_path}': {e}"))?;
@@ -35,17 +52,22 @@ pub fn compare_pdf_files(
         .load_pdf_from_byte_slice(&new_bytes, None)
         .map_err(|e| format!("Cannot parse new PDF '{new_path}': {e}"))?;
 
-    build_report(&old_doc, &new_doc, old_path, new_path, mode)
+    progress_callback(0.20); // 20%
+    build_report_with_progress(&old_doc, &new_doc, old_path, new_path, mode, progress_callback)
 }
 
-/// Build a `DiffReport` from two already-parsed documents.
-fn build_report(
+/// Build a `DiffReport` from two already-parsed documents with progress.
+fn build_report_with_progress<F>(
     old_doc: &PdfDocument<'_>,
     new_doc: &PdfDocument<'_>,
     old_path: &str,
     new_path: &str,
     mode: DiffMode,
-) -> Result<DiffReport, String> {
+    mut progress_callback: F,
+) -> Result<DiffReport, String>
+where
+    F: FnMut(f32),
+{
     let old_count = old_doc.pages().len() as usize;
     let new_count = new_doc.pages().len() as usize;
     let common = old_count.min(new_count);
@@ -68,6 +90,10 @@ fn build_report(
             DiffMode::Hybrid => crate::diff::visual::compare_hybrid_page(&old_page, &new_page, i)?,
         };
         pages.push(page_diff);
+
+        // Progress calculation: 20% to 90%
+        let progress = 0.20 + 0.70 * ((i + 1) as f32 / common as f32);
+        progress_callback(progress);
     }
 
     // Surplus pages.
@@ -86,9 +112,10 @@ fn build_report(
         });
     }
 
+    progress_callback(0.95); // 95%
     let stats = compute_stats(&pages);
 
-    Ok(DiffReport {
+    let report = DiffReport {
         old: DocSummary {
             path: old_path.to_string(),
             page_count: old_count,
@@ -103,7 +130,10 @@ fn build_report(
         generated_at: timestamp_rfc3339(),
         pages,
         stats,
-    })
+    };
+    
+    progress_callback(1.0); // 100%
+    Ok(report)
 }
 
 /// Compare the text of two pages and classify the result.

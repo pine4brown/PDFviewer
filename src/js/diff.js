@@ -1,6 +1,6 @@
 /* ==========================================================================
    WaffleMatrix PDF Viewer — Diff Panel
-   Two-file PDF comparison UI and report export (xlsx / csv / json / html).
+   Two-file PDF comparison UI, 1-to-1 visual diff, and report export.
    ========================================================================== */
 
 import {
@@ -50,7 +50,12 @@ export class DiffPanel {
     this.summaryEl = document.querySelector('#diff-summary');
     this.pageListEl = document.querySelector('#diff-page-list');
 
-    // Toolbar controls
+    // Toolbar & Table View Controls
+    this.btnViewTable = document.querySelector('#btn-view-table');
+    this.btnViewVisual = document.querySelector('#btn-view-visual');
+    this.tableSection = document.querySelector('#diff-table-section');
+    this.visualWorkspace = document.querySelector('#diff-visual-workspace');
+
     this.searchInput = document.querySelector('#diff-search-input');
     this.filterBtns = document.querySelectorAll('#diff-filters .diff__filter-btn');
     this.expandAllBtn = document.querySelector('#btn-diff-expand-all');
@@ -60,10 +65,32 @@ export class DiffPanel {
     this.countAddedEl = document.querySelector('#count-added');
     this.countRemovedEl = document.querySelector('#count-removed');
 
+    // 1-to-1 Visual Viewport Controls
+    this.pageSelect = document.querySelector('#diff-visual-page-select');
+    this.prevDiffBtn = document.querySelector('#btn-visual-prev-diff');
+    this.nextDiffBtn = document.querySelector('#btn-visual-next-diff');
+    this.zoomOutBtn = document.querySelector('#btn-visual-zoom-out');
+    this.zoomInBtn = document.querySelector('#btn-visual-zoom-in');
+    this.zoomLevelEl = document.querySelector('#visual-zoom-level');
+    this.viewportOld = document.querySelector('#viewport-old');
+    this.viewportNew = document.querySelector('#viewport-new');
+    this.stageOld = document.querySelector('#stage-old');
+    this.stageNew = document.querySelector('#stage-new');
+    this.svgOld = document.querySelector('#svg-overlay-old');
+    this.svgNew = document.querySelector('#svg-overlay-new');
+    this.canvasOld = document.querySelector('#canvas-visual-old');
+    this.canvasNew = document.querySelector('#canvas-visual-new');
+
     /** @type {object|null} */
     this.report = null;
     this.activeFilter = 'all';
     this.searchQuery = '';
+    this.activeViewMode = 'table';
+    this.visualZoomScale = 1.0;
+    this.currentVisualPageIndex = 0;
+    this.flatDiffList = [];
+    this.activeDiffIndex = 0;
+    this._isSyncingScroll = false;
 
     this._bindEvents();
   }
@@ -75,7 +102,6 @@ export class DiffPanel {
   }
 
   open() {
-    // Hide the normal viewer content while in diff mode.
     this.viewer.hideWelcome();
     const canvasWrap = document.querySelector('#viewer-canvas-wrap');
     if (canvasWrap) canvasWrap.hidden = true;
@@ -91,7 +117,6 @@ export class DiffPanel {
     const viewerMain = document.querySelector('#viewer-main');
     if (viewerMain) viewerMain.hidden = false;
 
-    // Restore whatever the viewer was showing.
     if (this.viewer.isOpen) {
       const canvasWrap = document.querySelector('#viewer-canvas-wrap');
       if (canvasWrap) canvasWrap.hidden = false;
@@ -121,6 +146,10 @@ export class DiffPanel {
       btn.addEventListener('click', () => this._export(btn.dataset.export));
     });
 
+    // View Switcher Tabs
+    this.btnViewTable?.addEventListener('click', () => this._switchView('table'));
+    this.btnViewVisual?.addEventListener('click', () => this._switchView('visual'));
+
     // Filter tabs
     this.filterBtns?.forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -144,6 +173,62 @@ export class DiffPanel {
     // Accordion controls
     this.expandAllBtn?.addEventListener('click', () => this._toggleAllPages(true));
     this.collapseAllBtn?.addEventListener('click', () => this._toggleAllPages(false));
+
+    // 1-to-1 Visual View Controls
+    this.pageSelect?.addEventListener('change', (e) => {
+      const pageIdx = parseInt(e.target.value, 10);
+      this._renderVisualPage(pageIdx);
+    });
+
+    this.prevDiffBtn?.addEventListener('click', () => this._stepVisualDiff(-1));
+    this.nextDiffBtn?.addEventListener('click', () => this._stepVisualDiff(1));
+    this.zoomOutBtn?.addEventListener('click', () => this._setVisualZoom(this.visualZoomScale - 0.2));
+    this.zoomInBtn?.addEventListener('click', () => this._setVisualZoom(this.visualZoomScale + 0.2));
+
+    // Synchronized scroll between Left (Old) and Right (New) viewports
+    this._bindViewportSyncScroll();
+  }
+
+  _bindViewportSyncScroll() {
+    const syncScroll = (source, target) => {
+      if (this._isSyncingScroll) return;
+      this._isSyncingScroll = true;
+      target.scrollTop = source.scrollTop;
+      target.scrollLeft = source.scrollLeft;
+      requestAnimationFrame(() => {
+        this._isSyncingScroll = false;
+      });
+    };
+
+    this.viewportOld?.addEventListener('scroll', () => {
+      if (this.viewportNew) syncScroll(this.viewportOld, this.viewportNew);
+    });
+
+    this.viewportNew?.addEventListener('scroll', () => {
+      if (this.viewportOld) syncScroll(this.viewportNew, this.viewportOld);
+    });
+  }
+
+  _switchView(viewMode) {
+    this.activeViewMode = viewMode;
+    const isTable = viewMode === 'table';
+
+    if (this.btnViewTable) {
+      this.btnViewTable.classList.toggle('is-active', isTable);
+      this.btnViewTable.setAttribute('aria-selected', isTable ? 'true' : 'false');
+    }
+
+    if (this.btnViewVisual) {
+      this.btnViewVisual.classList.toggle('is-active', !isTable);
+      this.btnViewVisual.setAttribute('aria-selected', !isTable ? 'true' : 'false');
+    }
+
+    if (this.tableSection) this.tableSection.hidden = !isTable;
+    if (this.visualWorkspace) this.visualWorkspace.hidden = isTable;
+
+    if (!isTable && this.report) {
+      this._renderVisualWorkspace();
+    }
   }
 
   async _run() {
@@ -166,6 +251,14 @@ export class DiffPanel {
       }
       this.report = res.report;
       this._render(res.report);
+
+      // Auto switch view tab for Visual or Hybrid comparison modes
+      if (this.modeSelect.value === 'visual' || this.modeSelect.value === 'hybrid') {
+        this._switchView('visual');
+      } else {
+        this._switchView('table');
+      }
+
       this._setMessage(res.message);
     } catch (err) {
       console.error('[Diff] Compare failed:', err);
@@ -201,6 +294,16 @@ export class DiffPanel {
     const removedCount = s.removed_entries ?? 0;
     const modifiedCount = s.modified_entries ?? 0;
 
+    // Build flat list of all diffs for 1-to-1 navigation
+    this.flatDiffList = [];
+    (report.pages || []).forEach((page) => {
+      (page.entries || []).forEach((entry) => {
+        if (entry.is_change !== false && entry.kind !== 'unchanged') {
+          this.flatDiffList.push({ pageIndex: page.page_index, entry });
+        }
+      });
+    });
+
     // Update filter badges
     if (this.countAllEl) this.countAllEl.textContent = String(totalChanges);
     if (this.countModifiedEl) this.countModifiedEl.textContent = String(modifiedCount);
@@ -228,7 +331,6 @@ export class DiffPanel {
       processedPages++;
       const section = document.createElement('details');
       section.className = 'diff__page';
-      // Smart initial accordion state: if total changes > 12, open only top 3 pages by default to keep page responsive
       section.open = totalChanges <= 12 || processedPages <= 3;
 
       const statusLabel = STATUS_LABEL[page.status] || page.status;
@@ -265,6 +367,17 @@ export class DiffPanel {
         tr.dataset.kind = kind;
         tr.dataset.search = `${entry.old_text || ''} ${entry.new_text || ''}`.toLowerCase();
 
+        // Clicking a row in table jumps to 1-to-1 visual view
+        tr.style.cursor = 'pointer';
+        tr.addEventListener('click', () => {
+          const diffIdx = this.flatDiffList.findIndex((item) => item.entry === entry);
+          if (diffIdx >= 0) {
+            this.activeDiffIndex = diffIdx;
+          }
+          this.currentVisualPageIndex = page.page_index;
+          this._switchView('visual');
+        });
+
         const { oldHtml, newHtml } = this._formatInlineDiff(entry.old_text || '', entry.new_text || '', kind);
 
         tr.innerHTML = `
@@ -286,6 +399,149 @@ export class DiffPanel {
       this.pageListEl.innerHTML = `<p class="diff__empty">${t('diff.noChanges')}</p>`;
     } else {
       this._applyFilter();
+    }
+
+    // Build Page Select Dropdown for Visual Workspace
+    if (this.pageSelect) {
+      this.pageSelect.innerHTML = '';
+      pages.forEach((p, idx) => {
+        const opt = document.createElement('option');
+        opt.value = String(p.page_index);
+        opt.textContent = t('diff.page', { page: p.page_index + 1 }) + (p.change_count() > 0 ? ` (${p.change_count()})` : '');
+        this.pageSelect.appendChild(opt);
+      });
+    }
+  }
+
+  // ---------- 1-to-1 Side-by-Side Visual Workspace Logic ----------
+
+  _renderVisualWorkspace() {
+    if (!this.report || !this.report.pages?.length) return;
+    this.pageSelect.value = String(this.currentVisualPageIndex);
+    this._renderVisualPage(this.currentVisualPageIndex);
+  }
+
+  _renderVisualPage(pageIdx) {
+    this.currentVisualPageIndex = pageIdx;
+    const page = (this.report?.pages || []).find((p) => p.page_index === pageIdx);
+    if (!page) return;
+
+    // Clear SVG overlays
+    if (this.svgOld) this.svgOld.innerHTML = '';
+    if (this.svgNew) this.svgNew.innerHTML = '';
+
+    // Standard PDF page dimensions (8.5x11 inches = 612x792 pt, default 600x800 for rendering canvas)
+    const pageWidth = 600;
+    const pageHeight = 800;
+
+    if (this.stageOld) {
+      this.stageOld.style.width = `${pageWidth}px`;
+      this.stageOld.style.height = `${pageHeight}px`;
+    }
+    if (this.stageNew) {
+      this.stageNew.style.width = `${pageWidth}px`;
+      this.stageNew.style.height = `${pageHeight}px`;
+    }
+
+    // Draw background dummy grid/page preview if canvas rendering is unattached
+    this._drawPlaceholderCanvas(this.canvasOld, 'Old Page ' + (pageIdx + 1), '#fff5f5');
+    this._drawPlaceholderCanvas(this.canvasNew, 'New Page ' + (pageIdx + 1), '#f0fdf4');
+
+    // Create SVG overlay rects for visual diffs
+    const entries = (page.entries || []).filter((e) => e.is_change !== false && e.kind !== 'unchanged');
+
+    entries.forEach((entry, idx) => {
+      const isCurrentActive = this.flatDiffList[this.activeDiffIndex]?.entry === entry;
+
+      // Draw Old Bounding Box (Deletions / Baseline rect)
+      const oldR = entry.old_rect;
+      if (oldR) {
+        this._appendSvgRect(this.svgOld, oldR, 'diff__rect--del', isCurrentActive);
+      }
+
+      // Draw New Bounding Box (Additions / Visual rects)
+      const newR = entry.new_rect;
+      if (newR) {
+        this._appendSvgRect(this.svgNew, newR, 'diff__rect--add', isCurrentActive);
+      }
+
+      for (const vRect of entry.visual_rects || []) {
+        this._appendSvgRect(this.svgNew, vRect, 'diff__rect--add', isCurrentActive);
+      }
+    });
+
+    this._setVisualZoom(this.visualZoomScale);
+  }
+
+  _appendSvgRect(svgElement, rect, className, isActive) {
+    if (!svgElement || !rect) return;
+    const svgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    
+    // Convert point coordinates to viewport px
+    const left = rect.left;
+    const top = rect.top;
+    const width = Math.max(rect.right - rect.left, 8);
+    const height = Math.max(rect.bottom - rect.top, 8);
+
+    svgRect.setAttribute('x', String(left));
+    svgRect.setAttribute('y', String(top));
+    svgRect.setAttribute('width', String(width));
+    svgRect.setAttribute('height', String(height));
+    svgRect.setAttribute('rx', '3');
+    svgRect.setAttribute('class', `diff__rect ${className} ${isActive ? 'diff__rect--active' : ''}`);
+
+    svgElement.appendChild(svgRect);
+  }
+
+  _drawPlaceholderCanvas(canvas, label, bgColor) {
+    if (!canvas) return;
+    canvas.width = 600;
+    canvas.height = 800;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(0, 0, 600, 800);
+
+    // Subtle document grid pattern
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 1;
+    for (let x = 40; x < 600; x += 40) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, 800);
+      ctx.stroke();
+    }
+    for (let y = 40; y < 800; y += 40) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(600, y);
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = '#64748b';
+    ctx.font = 'bold 16px sans-serif';
+    ctx.fillText(label, 40, 50);
+  }
+
+  _setVisualZoom(scale) {
+    this.visualZoomScale = Math.max(0.5, Math.min(2.5, scale));
+    if (this.zoomLevelEl) {
+      this.zoomLevelEl.textContent = `${Math.round(this.visualZoomScale * 100)}%`;
+    }
+
+    const transformStr = `scale(${this.visualZoomScale})`;
+    if (this.stageOld) this.stageOld.style.transform = transformStr;
+    if (this.stageNew) this.stageNew.style.transform = transformStr;
+  }
+
+  _stepVisualDiff(direction) {
+    if (!this.flatDiffList.length) return;
+    this.activeDiffIndex = (this.activeDiffIndex + direction + this.flatDiffList.length) % this.flatDiffList.length;
+    const targetItem = this.flatDiffList[this.activeDiffIndex];
+
+    if (targetItem) {
+      this._renderVisualPage(targetItem.pageIndex);
     }
   }
 
@@ -320,7 +576,6 @@ export class DiffPanel {
       }
     });
 
-    // Update empty notice if search/filter returns 0 results
     let emptyNotice = this.pageListEl.querySelector('.diff__no-matches');
     if (totalVisibleRows === 0 && pages.length > 0) {
       if (!emptyNotice) {
@@ -412,4 +667,3 @@ export class DiffPanel {
       .replace(/"/g, '&quot;');
   }
 }
-

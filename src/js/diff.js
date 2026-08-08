@@ -106,6 +106,20 @@ export class DiffPanel {
     this.flatDiffList = [];
     this.activeDiffIndex = 0;
 
+    // Keyboard navigation (J/K)
+    document.addEventListener('keydown', (e) => {
+      if (!this.isOpen) return;
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+      if (e.key.toLowerCase() === 'j') {
+        e.preventDefault();
+        this._stepDiff(1);
+      } else if (e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        this._stepDiff(-1);
+      }
+    });
+
     this._bindEvents();
   }
 
@@ -137,6 +151,8 @@ export class DiffPanel {
     } else {
       this.viewer.showWelcome();
     }
+
+    this._emit('diff:closed');
   }
 
   _bindEvents() {
@@ -207,6 +223,7 @@ export class DiffPanel {
       this.report = res.report;
       this.recentPairs.saveRecentPair(oldPath, newPath);
       this._render(res.report);
+      this._emit('diff:completed', { report: this.report });
 
       if (this.modeSelect.value === 'visual' || this.modeSelect.value === 'hybrid') {
         this._switchView('visual');
@@ -302,5 +319,51 @@ export class DiffPanel {
     if (visible) {
       this._updateProgress(0);
     }
+  }
+
+  _stepDiff(direction) {
+    if (!this.flatDiffList.length) return;
+    
+    this.activeDiffIndex = (this.activeDiffIndex + direction + this.flatDiffList.length) % this.flatDiffList.length;
+    const targetItem = this.flatDiffList[this.activeDiffIndex];
+    if (!targetItem) return;
+
+    if (this.activeViewMode === 'visual') {
+      this.visualView.renderVisualPage(targetItem.pageIndex, this.report, this.flatDiffList, this.activeDiffIndex);
+      this.visualView.pageSelect.value = String(targetItem.pageIndex);
+    } else {
+      this._focusTableRow(targetItem.entry, targetItem.pageIndex);
+    }
+  }
+
+  _focusTableRow(entry, pageIndex) {
+    const pages = this.tableView.pageListEl.querySelectorAll('.diff__page');
+    const pageEl = Array.from(pages).find(el => {
+      const pageNoSpan = el.querySelector('.diff__page-no');
+      return pageNoSpan && pageNoSpan.textContent.includes(String(pageIndex + 1));
+    });
+
+    if (pageEl) {
+      pageEl.open = true; // Expand accordion
+      const rows = pageEl.querySelectorAll('tbody tr');
+      const row = Array.from(rows).find(tr => {
+        return tr.dataset.search === `${entry.old_text || ''} ${entry.new_text || ''}`.toLowerCase();
+      });
+
+      if (row) {
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        row.classList.add('diff__row--focus');
+        setTimeout(() => {
+          row.classList.remove('diff__row--focus');
+        }, 1200);
+      }
+    }
+  }
+
+  _emit(name, detail = {}) {
+    this.el.dispatchEvent(new CustomEvent(name, {
+      bubbles: true,
+      detail,
+    }));
   }
 }

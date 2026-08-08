@@ -26,6 +26,7 @@ export class Sidebar {
     this._isOpen = false;
     this._outline = [];
     this._thumbnailsLoaded = new Set();
+    this._currentDiffReport = null;
 
     // Set initial DOM state
     this.el.classList.toggle('is-collapsed', !this._isOpen);
@@ -79,6 +80,11 @@ export class Sidebar {
 
     // Lazy load visible thumbnails
     this._lazyLoadThumbnails();
+
+    // Re-apply diff markers if report exists
+    if (this._currentDiffReport) {
+      this.showDiffMarkers(this._currentDiffReport);
+    }
   }
 
   /**
@@ -104,6 +110,44 @@ export class Sidebar {
     if (this.thumbnailList) this.thumbnailList.innerHTML = '';
     this._outline = [];
     this._thumbnailsLoaded.clear();
+    this._currentDiffReport = null;
+  }
+
+  /**
+   * Switch the active sidebar tab.
+   * @param {'outline'|'thumbnails'} tab
+   */
+  switchTab(tab) {
+    this._switchTab(tab);
+  }
+
+  /**
+   * Show red dot markers on thumbnails that have differences.
+   * @param {object|null} report - The computed diff report
+   */
+  showDiffMarkers(report) {
+    this._currentDiffReport = report;
+    const items = this.thumbnailList?.querySelectorAll('.thumbnail-item') || [];
+    if (!items.length) return;
+
+    // Clear existing markers
+    items.forEach(item => {
+      item.querySelector('.thumbnail-item__diff-marker')?.remove();
+    });
+
+    if (!report || !report.pages) return;
+
+    report.pages.forEach(page => {
+      // Find changes count
+      const changesCount = (page.entries || []).filter(e => e.is_change !== false && e.kind !== 'unchanged').length;
+      if (changesCount > 0 && page.page_index < items.length) {
+        const item = items[page.page_index];
+        const marker = document.createElement('div');
+        marker.className = 'thumbnail-item__diff-marker';
+        marker.textContent = String(changesCount);
+        item.appendChild(marker);
+      }
+    });
   }
 
   // ---------- Private ----------

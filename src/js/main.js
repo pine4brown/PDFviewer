@@ -132,6 +132,21 @@ class App {
       }
     });
 
+    // Diff completed
+    document.addEventListener('diff:completed', (e) => {
+      const { report } = e.detail;
+      this.sidebar.showDiffMarkers(report);
+      // Automatically toggle sidebar open and switch to thumbnails
+      this.sidebar.toggle(true);
+      this.sidebar.switchTab('thumbnails');
+      this.toolbar.setSidebarState(true);
+    });
+
+    // Diff closed
+    document.addEventListener('diff:closed', () => {
+      this.sidebar.showDiffMarkers(null);
+    });
+
     // Search closed
     document.addEventListener('search:closed', () => {
       this.toolbar.setSearchState(false);

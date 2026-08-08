@@ -406,48 +406,115 @@
               </div>
             </div>
 
-            <!-- Diff control & filter bar -->
-            <div class="diff__toolbar">
-              <div class="diff__filters" id="diff-filters" role="tablist" aria-label="Diff filters">
-                <button class="diff__filter-btn is-active" data-filter="all" role="tab" aria-selected="true">
-                  <span data-i18n="diff.filterAll">All</span>
-                  <span class="diff__filter-badge diff__filter-badge--all" id="count-all">0</span>
-                </button>
-                <button class="diff__filter-btn" data-filter="modified" role="tab" aria-selected="false">
-                  <span data-i18n="diff.filterModified">Modified</span>
-                  <span class="diff__filter-badge diff__filter-badge--modified" id="count-modified">0</span>
-                </button>
-                <button class="diff__filter-btn" data-filter="added" role="tab" aria-selected="false">
-                  <span data-i18n="diff.filterAdded">Added</span>
-                  <span class="diff__filter-badge diff__filter-badge--added" id="count-added">0</span>
-                </button>
-                <button class="diff__filter-btn" data-filter="removed" role="tab" aria-selected="false">
-                  <span data-i18n="diff.filterRemoved">Removed</span>
-                  <span class="diff__filter-badge diff__filter-badge--removed" id="count-removed">0</span>
-                </button>
-              </div>
-
-              <div class="diff__search-wrap">
-                <svg class="diff__search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <circle cx="11" cy="11" r="8"/>
-                  <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-                <input
-                  id="diff-search-input"
-                  type="search"
-                  class="diff__search-input"
-                  placeholder="Filter diff text..."
-                  data-i18n-placeholder="diff.searchPlaceholder"
-                />
-              </div>
-
-              <div class="diff__accordion-controls">
-                <button id="btn-diff-expand-all" class="diff__btn diff__btn--sm" data-i18n="diff.expandAll">Expand all</button>
-                <button id="btn-diff-collapse-all" class="diff__btn diff__btn--sm" data-i18n="diff.collapseAll">Collapse all</button>
-              </div>
+            <!-- View Switcher Tabs -->
+            <div class="diff__view-switcher" role="tablist" aria-label="Comparison View Mode">
+              <button id="btn-view-table" class="diff__view-tab is-active" role="tab" aria-selected="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+                <span data-i18n="diff.viewTable">Table View</span>
+              </button>
+              <button id="btn-view-visual" class="diff__view-tab" role="tab" aria-selected="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="9" height="18" rx="1"/><rect x="13" y="3" width="9" height="18" rx="1"/><line x1="6.5" y1="8" x2="6.5" y2="8.01"/><line x1="17.5" y1="8" x2="17.5" y2="8.01"/></svg>
+                <span data-i18n="diff.viewSideBySide">1-to-1 Visual Diff</span>
+              </button>
             </div>
 
-            <div id="diff-page-list" class="diff__page-list"></div>
+            <!-- Table View Container -->
+            <div id="diff-table-section" class="diff__view-section">
+              <!-- Diff control & filter bar -->
+              <div class="diff__toolbar">
+                <div class="diff__filters" id="diff-filters" role="tablist" aria-label="Diff filters">
+                  <button class="diff__filter-btn is-active" data-filter="all" role="tab" aria-selected="true">
+                    <span data-i18n="diff.filterAll">All</span>
+                    <span class="diff__filter-badge diff__filter-badge--all" id="count-all">0</span>
+                  </button>
+                  <button class="diff__filter-btn" data-filter="modified" role="tab" aria-selected="false">
+                    <span data-i18n="diff.filterModified">Modified</span>
+                    <span class="diff__filter-badge diff__filter-badge--modified" id="count-modified">0</span>
+                  </button>
+                  <button class="diff__filter-btn" data-filter="added" role="tab" aria-selected="false">
+                    <span data-i18n="diff.filterAdded">Added</span>
+                    <span class="diff__filter-badge diff__filter-badge--added" id="count-added">0</span>
+                  </button>
+                  <button class="diff__filter-btn" data-filter="removed" role="tab" aria-selected="false">
+                    <span data-i18n="diff.filterRemoved">Removed</span>
+                    <span class="diff__filter-badge diff__filter-badge--removed" id="count-removed">0</span>
+                  </button>
+                </div>
+
+                <div class="diff__search-wrap">
+                  <svg class="diff__search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  </svg>
+                  <input
+                    id="diff-search-input"
+                    type="search"
+                    class="diff__search-input"
+                    placeholder="Filter diff text..."
+                    data-i18n-placeholder="diff.searchPlaceholder"
+                  />
+                </div>
+
+                <div class="diff__accordion-controls">
+                  <button id="btn-diff-expand-all" class="diff__btn diff__btn--sm" data-i18n="diff.expandAll">Expand all</button>
+                  <button id="btn-diff-collapse-all" class="diff__btn diff__btn--sm" data-i18n="diff.collapseAll">Collapse all</button>
+                </div>
+              </div>
+
+              <div id="diff-page-list" class="diff__page-list"></div>
+            </div>
+
+            <!-- 1-to-1 Side-by-Side Visual Workspace Section -->
+            <div id="diff-visual-workspace" class="diff__visual-workspace diff__view-section" hidden>
+              <div class="diff__visual-toolbar">
+                <div class="diff__visual-page-nav">
+                  <label class="diff__mode-label" for="diff-visual-page-select">Page</label>
+                  <select id="diff-visual-page-select" class="diff__select diff__select--sm"></select>
+                </div>
+                <div class="diff__visual-nav-btns">
+                  <button id="btn-visual-prev-diff" class="diff__btn diff__btn--sm">
+                    <span data-i18n="diff.prevDiff">Previous Diff</span>
+                  </button>
+                  <button id="btn-visual-next-diff" class="diff__btn diff__btn--sm diff__btn--primary">
+                    <span data-i18n="diff.nextDiff">Next Diff</span>
+                  </button>
+                </div>
+                <div class="diff__visual-zoom-controls">
+                  <button id="btn-visual-zoom-out" class="diff__btn diff__btn--sm" title="Zoom out">−</button>
+                  <span id="visual-zoom-level" class="diff__zoom-text">100%</span>
+                  <button id="btn-visual-zoom-in" class="diff__btn diff__btn--sm" title="Zoom in">+</button>
+                </div>
+              </div>
+
+              <!-- Dual Viewports Side-by-Side -->
+              <div class="diff__side-by-side">
+                <div class="diff__pane diff__pane--old">
+                  <div class="diff__pane-header">
+                    <span class="diff__pane-badge diff__pane-badge--old">OLD</span>
+                    <span data-i18n="diff.oldDocHeader">Old Document (Baseline)</span>
+                  </div>
+                  <div class="diff__canvas-viewport" id="viewport-old">
+                    <div class="diff__canvas-stage" id="stage-old">
+                      <canvas id="canvas-visual-old"></canvas>
+                      <svg id="svg-overlay-old" class="diff__svg-overlay"></svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="diff__pane diff__pane--new">
+                  <div class="diff__pane-header">
+                    <span class="diff__pane-badge diff__pane-badge--new">NEW</span>
+                    <span data-i18n="diff.newDocHeader">New Document (Revised)</span>
+                  </div>
+                  <div class="diff__canvas-viewport" id="viewport-new">
+                    <div class="diff__canvas-stage" id="stage-new">
+                      <canvas id="canvas-visual-new"></canvas>
+                      <svg id="svg-overlay-new" class="diff__svg-overlay"></svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
       </div><!-- /.app__body -->

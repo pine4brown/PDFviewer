@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 260" width="100%" height="100%">
+  <rect width="650" height="260" fill="#f8fafc" rx="12"/>
+  <text x="325" y="32" font-family="Hiragino Sans, sans-serif" font-size="18" font-weight="bold" fill="#0f172a" text-anchor="middle">システム構成図 v2.0 (エンタープライズ分散構成)</text>
+  
+  <!-- Client -->
+  <rect x="25" y="90" width="100" height="80" fill="#1e40af" rx="8"/>
+  <text x="75" y="125" font-family="Hiragino Sans, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">Clients</text>
+  <text x="75" y="145" font-family="Hiragino Sans, sans-serif" font-size="10" fill="#93c5fd" text-anchor="middle">GUI / Web / API</text>
+
+  <path d="M 125 130 L 155 130" stroke="#475569" stroke-width="3" marker-end="url(#arr3)"/>
+
+  <!-- Load Balancer -->
+  <rect x="160" y="90" width="100" height="80" fill="#0284c7" rx="8"/>
+  <text x="210" y="125" font-family="Hiragino Sans, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">Load Balancer</text>
+  <text x="210" y="145" font-family="Hiragino Sans, sans-serif" font-size="10" fill="#bae6fd" text-anchor="middle">Nginx / NPU</text>
+
+  <path d="M 260 130 L 290 130" stroke="#475569" stroke-width="3" marker-end="url(#arr3)"/>
+
+  <!-- API Cluster -->
+  <rect x="295" y="60" width="110" height="60" fill="#059669" rx="6"/>
+  <text x="350" y="90" font-family="Hiragino Sans, sans-serif" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">API Node 1</text>
+  <text x="350" y="105" font-family="Hiragino Sans, sans-serif" font-size="9" fill="#a7f3d0" text-anchor="middle">Rust Worker</text>
+
+  <rect x="295" y="140" width="110" height="60" fill="#059669" rx="6"/>
+  <text x="350" y="170" font-family="Hiragino Sans, sans-serif" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">API Node 2</text>
+  <text x="350" y="185" font-family="Hiragino Sans, sans-serif" font-size="9" fill="#a7f3d0" text-anchor="middle">Rust Worker</text>
+
+  <path d="M 405 90 L 440 110" stroke="#475569" stroke-width="2" marker-end="url(#arr3)"/>
+  <path d="M 405 170 L 440 150" stroke="#475569" stroke-width="2" marker-end="url(#arr3)"/>
+
+  <!-- Distributed Cache & DB -->
+  <rect x="445" y="60" width="180" height="60" fill="#7c3aed" rx="6"/>
+  <text x="535" y="90" font-family="Hiragino Sans, sans-serif" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">Redis Cluster (In-Memory)</text>
+  <text x="535" y="105" font-family="Hiragino Sans, sans-serif" font-size="9" fill="#ddd6fe" text-anchor="middle">超高速差分キャッシュ</text>
+
+  <rect x="445" y="140" width="180" height="60" fill="#c2410c" rx="6"/>
+  <text x="535" y="170" font-family="Hiragino Sans, sans-serif" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">Primary/Replica DB</text>
+  <text x="535" y="185" font-family="Hiragino Sans, sans-serif" font-size="9" fill="#ffedd5" text-anchor="middle">PostgreSQL 16 Multi-Region</text>
+
+  <defs>
+    <marker id="arr3" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+  </defs>
+
+  <text x="325" y="235" font-family="Hiragino Sans, sans-serif" font-size="12" font-weight="bold" fill="#0369a1" text-anchor="middle">最大スループット: 50,000 req/sec (Auto-Scaling有効)</text>
+</svg>

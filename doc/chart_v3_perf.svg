@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 260" width="100%" height="100%">
+  <rect width="650" height="260" fill="#f8fafc" rx="12"/>
+  <text x="325" y="32" font-family="Hiragino Sans, sans-serif" font-size="18" font-weight="bold" fill="#0f172a" text-anchor="middle">バージョン別 1ページ判定処理時間 (秒) - 低いほど高速</text>
+  
+  <!-- Y-Axis Lines -->
+  <line x1="100" y1="60" x2="580" y2="60" stroke="#e2e8f0" stroke-width="1"/>
+  <line x1="100" y1="100" x2="580" y2="100" stroke="#e2e8f0" stroke-width="1"/>
+  <line x1="100" y1="140" x2="580" y2="140" stroke="#e2e8f0" stroke-width="1"/>
+  <line x1="100" y1="180" x2="580" y2="180" stroke="#cbd5e1" stroke-width="2"/>
+
+  <!-- Y-Axis Labels -->
+  <text x="85" y="65" font-family="Hiragino Sans, sans-serif" font-size="11" fill="#64748b" text-anchor="end">1.5s</text>
+  <text x="85" y="105" font-family="Hiragino Sans, sans-serif" font-size="11" fill="#64748b" text-anchor="end">1.0s</text>
+  <text x="85" y="145" font-family="Hiragino Sans, sans-serif" font-size="11" fill="#64748b" text-anchor="end">0.5s</text>
+  <text x="85" y="185" font-family="Hiragino Sans, sans-serif" font-size="11" fill="#64748b" text-anchor="end">0.0s</text>
+
+  <!-- Bar 1: v1.0 -->
+  <rect x="150" y="60" width="80" height="120" fill="#94a3b8" rx="4"/>
+  <text x="190" y="52" font-family="Hiragino Sans, sans-serif" font-size="13" font-weight="bold" fill="#475569" text-anchor="middle">1.50 秒</text>
+  <text x="190" y="205" font-family="Hiragino Sans, sans-serif" font-size="13" font-weight="bold" fill="#334155" text-anchor="middle">v1.0 (初期)</text>
+
+  <!-- Bar 2: v1.1 -->
+  <rect x="300" y="148" width="80" height="32" fill="#38bdf8" rx="4"/>
+  <text x="340" y="140" font-family="Hiragino Sans, sans-serif" font-size="13" font-weight="bold" fill="#0284c7" text-anchor="middle">0.40 秒</text>
+  <text x="340" y="205" font-family="Hiragino Sans, sans-serif" font-size="13" font-weight="bold" fill="#334155" text-anchor="middle">v1.1 (改訂)</text>
+
+  <!-- Bar 3: v2.0 -->
+  <rect x="450" y="172" width="80" height="8" fill="#10b981" rx="2"/>
+  <text x="490" y="164" font-family="Hiragino Sans, sans-serif" font-size="13" font-weight="bold" fill="#059669" text-anchor="middle">0.05 秒</text>
+  <text x="490" y="205" font-family="Hiragino Sans, sans-serif" font-size="13" font-weight="bold" fill="#059669" text-anchor="middle">v2.0 (今回)</text>
+
+  <text x="325" y="240" font-family="Hiragino Sans, sans-serif" font-size="12" fill="#059669" text-anchor="middle">★ v2.0では並列パイプラインにより処理時間がv1.0比で30倍高速化</text>
+</svg>

@@ -60,6 +60,13 @@ const translations = {
     'diff.collapseAll': 'Collapse all',
     'diff.searchPlaceholder': 'Filter diff text...',
     'diff.noMatches': 'No diff entries match your search or filter.',
+    'diff.viewTable': 'Table View',
+    'diff.viewSideBySide': '1-to-1 Visual Diff',
+    'diff.prevDiff': 'Previous Diff',
+    'diff.nextDiff': 'Next Diff',
+    'diff.syncZoom': 'Sync Zoom',
+    'diff.oldDocHeader': 'Old Document (Baseline)',
+    'diff.newDocHeader': 'New Document (Revised)',
 
     // Sidebar
     'sidebar.outline': 'Outline',
@@ -145,6 +152,13 @@ const translations = {
     'diff.collapseAll': 'すべて折りたたむ',
     'diff.searchPlaceholder': '差分テキストを検索・絞り込み...',
     'diff.noMatches': '検索・フィルター条件に一致する差分はありません。',
+    'diff.viewTable': 'テーブル表示',
+    'diff.viewSideBySide': '1対1 ビジュアル比較',
+    'diff.prevDiff': '前の差分',
+    'diff.nextDiff': '次の差分',
+    'diff.syncZoom': '連動ズーム',
+    'diff.oldDocHeader': '旧PDF（比較元）',
+    'diff.newDocHeader': '新PDF（変更後）',
 
     // サイドバー
     'sidebar.outline': '目次',

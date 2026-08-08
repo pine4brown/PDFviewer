@@ -50,8 +50,20 @@ export class DiffPanel {
     this.summaryEl = document.querySelector('#diff-summary');
     this.pageListEl = document.querySelector('#diff-page-list');
 
+    // Toolbar controls
+    this.searchInput = document.querySelector('#diff-search-input');
+    this.filterBtns = document.querySelectorAll('#diff-filters .diff__filter-btn');
+    this.expandAllBtn = document.querySelector('#btn-diff-expand-all');
+    this.collapseAllBtn = document.querySelector('#btn-diff-collapse-all');
+    this.countAllEl = document.querySelector('#count-all');
+    this.countModifiedEl = document.querySelector('#count-modified');
+    this.countAddedEl = document.querySelector('#count-added');
+    this.countRemovedEl = document.querySelector('#count-removed');
+
     /** @type {object|null} */
     this.report = null;
+    this.activeFilter = 'all';
+    this.searchQuery = '';
 
     this._bindEvents();
   }
@@ -108,6 +120,30 @@ export class DiffPanel {
     this.resultsEl?.querySelectorAll('[data-export]').forEach((btn) => {
       btn.addEventListener('click', () => this._export(btn.dataset.export));
     });
+
+    // Filter tabs
+    this.filterBtns?.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const filter = btn.dataset.filter;
+        this.filterBtns.forEach((b) => {
+          const isActive = b === btn;
+          b.classList.toggle('is-active', isActive);
+          b.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+        this.activeFilter = filter;
+        this._applyFilter();
+      });
+    });
+
+    // Search input
+    this.searchInput?.addEventListener('input', (e) => {
+      this.searchQuery = (e.target.value || '').trim().toLowerCase();
+      this._applyFilter();
+    });
+
+    // Accordion controls
+    this.expandAllBtn?.addEventListener('click', () => this._toggleAllPages(true));
+    this.collapseAllBtn?.addEventListener('click', () => this._toggleAllPages(false));
   }
 
   async _run() {
@@ -160,23 +196,40 @@ export class DiffPanel {
     this.resultsEl.hidden = false;
 
     const s = report.stats || {};
+    const totalChanges = report.total_changes ?? 0;
+    const addedCount = s.added_entries ?? 0;
+    const removedCount = s.removed_entries ?? 0;
+    const modifiedCount = s.modified_entries ?? 0;
+
+    // Update filter badges
+    if (this.countAllEl) this.countAllEl.textContent = String(totalChanges);
+    if (this.countModifiedEl) this.countModifiedEl.textContent = String(modifiedCount);
+    if (this.countAddedEl) this.countAddedEl.textContent = String(addedCount);
+    if (this.countRemovedEl) this.countRemovedEl.textContent = String(removedCount);
+
     this.summaryEl.textContent = t('diff.summary', {
-      total: report.total_changes ?? 0,
+      total: totalChanges,
       pages: report.pages?.length ?? 0,
-      added: s.added_entries ?? 0,
-      removed: s.removed_entries ?? 0,
-      modified: s.modified_entries ?? 0,
+      added: addedCount,
+      removed: removedCount,
+      modified: modifiedCount,
     });
 
     this.pageListEl.innerHTML = '';
 
-    for (const page of report.pages || []) {
+    const pages = report.pages || [];
+    let processedPages = 0;
+
+    for (let pageIdx = 0; pageIdx < pages.length; pageIdx++) {
+      const page = pages[pageIdx];
       const changes = (page.entries || []).filter((e) => e.is_change !== false && e.kind !== 'unchanged');
       if (page.status === 'match' && changes.length === 0) continue;
 
+      processedPages++;
       const section = document.createElement('details');
       section.className = 'diff__page';
-      section.open = true;
+      // Smart initial accordion state: if total changes > 12, open only top 3 pages by default to keep page responsive
+      section.open = totalChanges <= 12 || processedPages <= 3;
 
       const statusLabel = STATUS_LABEL[page.status] || page.status;
       const summary = document.createElement('summary');
@@ -208,11 +261,17 @@ export class DiffPanel {
         const region = entry.visual_rects?.length
           ? `${entry.visual_rects.length}`
           : '—';
+
+        tr.dataset.kind = kind;
+        tr.dataset.search = `${entry.old_text || ''} ${entry.new_text || ''}`.toLowerCase();
+
+        const { oldHtml, newHtml } = this._formatInlineDiff(entry.old_text || '', entry.new_text || '', kind);
+
         tr.innerHTML = `
           <td><span class="diff__kind ${KIND_CLASS[kind] || ''}">${KIND_LABEL[kind] || kind}</span></td>
           <td class="diff__line">${line != null ? line + 1 : '—'}</td>
-          <td class="diff__text">${this._esc(entry.old_text || '')}</td>
-          <td class="diff__text">${this._esc(entry.new_text || '')}</td>
+          <td class="diff__text">${oldHtml}</td>
+          <td class="diff__text">${newHtml}</td>
           <td class="diff__region">${region}</td>
         `;
         tbody.appendChild(tr);
@@ -225,7 +284,119 @@ export class DiffPanel {
 
     if (!this.pageListEl.children.length) {
       this.pageListEl.innerHTML = `<p class="diff__empty">${t('diff.noChanges')}</p>`;
+    } else {
+      this._applyFilter();
     }
+  }
+
+  _applyFilter() {
+    const pages = this.pageListEl.querySelectorAll('.diff__page');
+    let totalVisibleRows = 0;
+
+    pages.forEach((pageEl) => {
+      const rows = pageEl.querySelectorAll('tbody tr');
+      let pageVisibleRows = 0;
+
+      rows.forEach((tr) => {
+        const kind = tr.dataset.kind;
+        const searchText = tr.dataset.search || '';
+
+        const matchesKind = this.activeFilter === 'all' || kind === this.activeFilter;
+        const matchesSearch = !this.searchQuery || searchText.includes(this.searchQuery);
+
+        if (matchesKind && matchesSearch) {
+          tr.classList.remove('diff__row--hidden');
+          pageVisibleRows++;
+        } else {
+          tr.classList.add('diff__row--hidden');
+        }
+      });
+
+      if (pageVisibleRows > 0) {
+        pageEl.classList.remove('diff__page--hidden');
+        totalVisibleRows += pageVisibleRows;
+      } else {
+        pageEl.classList.add('diff__page--hidden');
+      }
+    });
+
+    // Update empty notice if search/filter returns 0 results
+    let emptyNotice = this.pageListEl.querySelector('.diff__no-matches');
+    if (totalVisibleRows === 0 && pages.length > 0) {
+      if (!emptyNotice) {
+        emptyNotice = document.createElement('p');
+        emptyNotice.className = 'diff__empty diff__no-matches';
+        emptyNotice.textContent = t('diff.noMatches');
+        this.pageListEl.appendChild(emptyNotice);
+      } else {
+        emptyNotice.hidden = false;
+      }
+    } else if (emptyNotice) {
+      emptyNotice.hidden = true;
+    }
+  }
+
+  _toggleAllPages(openState) {
+    this.pageListEl.querySelectorAll('.diff__page').forEach((el) => {
+      if (!el.classList.contains('diff__page--hidden')) {
+        el.open = openState;
+      }
+    });
+  }
+
+  _formatInlineDiff(oldText, newText, kind) {
+    const oldEsc = this._esc(oldText);
+    const newEsc = this._esc(newText);
+
+    if (kind === 'removed') {
+      return {
+        oldHtml: `<span class="diff__del">${oldEsc}</span>`,
+        newHtml: '',
+      };
+    }
+    if (kind === 'added') {
+      return {
+        oldHtml: '',
+        newHtml: `<span class="diff__add">${newEsc}</span>`,
+      };
+    }
+    if (kind === 'modified') {
+      return this._computeWordDiff(oldText, newText);
+    }
+
+    return { oldHtml: oldEsc, newHtml: newEsc };
+  }
+
+  _computeWordDiff(oldText, newText) {
+    const oldWords = oldText.split(/(\s+)/);
+    const newWords = newText.split(/(\s+)/);
+
+    const oldSet = new Set(oldWords.map((w) => w.trim()).filter(Boolean));
+    const newSet = new Set(newWords.map((w) => w.trim()).filter(Boolean));
+
+    let oldHtml = oldWords
+      .map((w) => {
+        const trimmed = w.trim();
+        const esc = this._esc(w);
+        if (trimmed && !newSet.has(trimmed)) {
+          return `<span class="diff__del">${esc}</span>`;
+        }
+        return esc;
+      })
+      .join('');
+
+    let newHtml = newWords
+      .map((w) => {
+        const trimmed = w.trim();
+        const esc = this._esc(w);
+        if (trimmed && !oldSet.has(trimmed)) {
+          return `<span class="diff__add">${esc}</span>`;
+        }
+        return esc;
+      })
+      .join('');
+
+    return { oldHtml, newHtml };
   }
 
   _setMessage(text, isError = false) {
@@ -241,3 +412,4 @@ export class DiffPanel {
       .replace(/"/g, '&quot;');
   }
 }
+

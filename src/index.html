@@ -406,6 +406,47 @@
               </div>
             </div>
 
+            <!-- Diff control & filter bar -->
+            <div class="diff__toolbar">
+              <div class="diff__filters" id="diff-filters" role="tablist" aria-label="Diff filters">
+                <button class="diff__filter-btn is-active" data-filter="all" role="tab" aria-selected="true">
+                  <span data-i18n="diff.filterAll">All</span>
+                  <span class="diff__filter-badge diff__filter-badge--all" id="count-all">0</span>
+                </button>
+                <button class="diff__filter-btn" data-filter="modified" role="tab" aria-selected="false">
+                  <span data-i18n="diff.filterModified">Modified</span>
+                  <span class="diff__filter-badge diff__filter-badge--modified" id="count-modified">0</span>
+                </button>
+                <button class="diff__filter-btn" data-filter="added" role="tab" aria-selected="false">
+                  <span data-i18n="diff.filterAdded">Added</span>
+                  <span class="diff__filter-badge diff__filter-badge--added" id="count-added">0</span>
+                </button>
+                <button class="diff__filter-btn" data-filter="removed" role="tab" aria-selected="false">
+                  <span data-i18n="diff.filterRemoved">Removed</span>
+                  <span class="diff__filter-badge diff__filter-badge--removed" id="count-removed">0</span>
+                </button>
+              </div>
+
+              <div class="diff__search-wrap">
+                <svg class="diff__search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="11" cy="11" r="8"/>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input
+                  id="diff-search-input"
+                  type="search"
+                  class="diff__search-input"
+                  placeholder="Filter diff text..."
+                  data-i18n-placeholder="diff.searchPlaceholder"
+                />
+              </div>
+
+              <div class="diff__accordion-controls">
+                <button id="btn-diff-expand-all" class="diff__btn diff__btn--sm" data-i18n="diff.expandAll">Expand all</button>
+                <button id="btn-diff-collapse-all" class="diff__btn diff__btn--sm" data-i18n="diff.collapseAll">Collapse all</button>
+              </div>
+            </div>
+
             <div id="diff-page-list" class="diff__page-list"></div>
           </div>
         </section>

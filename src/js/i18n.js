@@ -52,6 +52,14 @@ const translations = {
     'diff.errorNoReport': 'Run a comparison first.',
     'diff.errorExport': 'Export failed.',
     'diff.exported': 'Report exported successfully.',
+    'diff.filterAll': 'All',
+    'diff.filterModified': 'Modified',
+    'diff.filterAdded': 'Added',
+    'diff.filterRemoved': 'Removed',
+    'diff.expandAll': 'Expand all',
+    'diff.collapseAll': 'Collapse all',
+    'diff.searchPlaceholder': 'Filter diff text...',
+    'diff.noMatches': 'No diff entries match your search or filter.',
 
     // Sidebar
     'sidebar.outline': 'Outline',
@@ -129,6 +137,14 @@ const translations = {
     'diff.errorNoReport': '先に比較を実行してください。',
     'diff.errorExport': '出力に失敗しました。',
     'diff.exported': 'レポートを出力しました。',
+    'diff.filterAll': 'すべて',
+    'diff.filterModified': '変更のみ',
+    'diff.filterAdded': '追加のみ',
+    'diff.filterRemoved': '削除のみ',
+    'diff.expandAll': 'すべて展開',
+    'diff.collapseAll': 'すべて折りたたむ',
+    'diff.searchPlaceholder': '差分テキストを検索・絞り込み...',
+    'diff.noMatches': '検索・フィルター条件に一致する差分はありません。',
 
     // サイドバー
     'sidebar.outline': '目次',

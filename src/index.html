@@ -345,7 +345,18 @@
         <!-- ===== DIFF PANEL ===== -->
         <section class="diff" id="diff-panel" role="region" aria-label="PDF comparison" hidden>
           <div class="diff__setup">
-            <h1 class="diff__title" data-i18n="diff.title">Compare PDF Files</h1>
+            <div class="diff__setup-header">
+              <h1 class="diff__title" data-i18n="diff.title">Compare PDF Files</h1>
+              <button id="btn-diff-load-last" class="diff__btn diff__btn--sm" data-i18n="diff.loadLastPair" hidden>
+                Load Last Pair
+              </button>
+            </div>
+
+            <!-- Recent Comparisons Chips -->
+            <div id="diff-recent-container" class="diff__recent-container" hidden>
+              <span class="diff__recent-title" data-i18n="diff.recentPairs">Recent Comparisons:</span>
+              <div id="diff-recent-chips" class="diff__recent-chips"></div>
+            </div>
 
             <div class="diff__files">
               <div class="diff__file">

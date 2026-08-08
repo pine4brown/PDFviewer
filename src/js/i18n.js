@@ -67,6 +67,10 @@ const translations = {
     'diff.syncZoom': 'Sync Zoom',
     'diff.oldDocHeader': 'Old Document (Baseline)',
     'diff.newDocHeader': 'New Document (Revised)',
+    'diff.recentPairs': 'Recent Comparisons',
+    'diff.loadLastPair': 'Load Last Pair',
+    'diff.quickCandidates': 'Quick Select',
+    'diff.noRecentPairs': 'No recent comparison history',
 
     // Sidebar
     'sidebar.outline': 'Outline',
@@ -159,6 +163,10 @@ const translations = {
     'diff.syncZoom': '連動ズーム',
     'diff.oldDocHeader': '旧PDF（比較元）',
     'diff.newDocHeader': '新PDF（変更後）',
+    'diff.recentPairs': '最近使った比較ペア',
+    'diff.loadLastPair': '前回のペアを呼び出す',
+    'diff.quickCandidates': 'クイック候補',
+    'diff.noRecentPairs': '比較履歴はありません',
 
     // サイドバー
     'sidebar.outline': '目次',

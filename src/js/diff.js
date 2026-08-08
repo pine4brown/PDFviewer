@@ -81,6 +81,11 @@ export class DiffPanel {
     this.canvasOld = document.querySelector('#canvas-visual-old');
     this.canvasNew = document.querySelector('#canvas-visual-new');
 
+    // Recent Pairs Controls
+    this.recentContainerEl = document.querySelector('#diff-recent-container');
+    this.recentChipsEl = document.querySelector('#diff-recent-chips');
+    this.loadLastPairBtn = document.querySelector('#btn-diff-load-last');
+
     /** @type {object|null} */
     this.report = null;
     this.activeFilter = 'all';
@@ -109,6 +114,7 @@ export class DiffPanel {
     if (viewerMain) viewerMain.hidden = true;
 
     this.el.hidden = false;
+    this._loadRecentPairs(true); // Load pairs and auto-fill if fields are empty
   }
 
   close() {
@@ -173,6 +179,9 @@ export class DiffPanel {
     // Accordion controls
     this.expandAllBtn?.addEventListener('click', () => this._toggleAllPages(true));
     this.collapseAllBtn?.addEventListener('click', () => this._toggleAllPages(false));
+
+    // Recent Pair button
+    this.loadLastPairBtn?.addEventListener('click', () => this._loadLastPair());
 
     // 1-to-1 Visual View Controls
     this.pageSelect?.addEventListener('change', (e) => {
@@ -250,6 +259,7 @@ export class DiffPanel {
         return;
       }
       this.report = res.report;
+      this._saveRecentPair(oldPath, newPath);
       this._render(res.report);
 
       // Auto switch view tab for Visual or Hybrid comparison modes
@@ -666,5 +676,105 @@ export class DiffPanel {
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;');
+  }
+
+  // ---------- Recent Comparisons Helper Methods ----------
+
+  _loadRecentPairs(autoFill = false) {
+    try {
+      const stored = localStorage.getItem('wafflematrix-recent-diff-pairs');
+      const pairs = stored ? JSON.parse(stored) : [];
+
+      if (!pairs || pairs.length === 0) {
+        if (this.recentContainerEl) this.recentContainerEl.hidden = true;
+        if (this.loadLastPairBtn) this.loadLastPairBtn.hidden = true;
+        return;
+      }
+
+      if (this.recentContainerEl) this.recentContainerEl.hidden = false;
+      if (this.loadLastPairBtn) this.loadLastPairBtn.hidden = false;
+
+      // Auto fill if input fields are empty
+      if (autoFill && pairs[0]) {
+        if (!this.oldPath.value) this.oldPath.value = pairs[0].oldPath;
+        if (!this.newPath.value) this.newPath.value = pairs[0].newPath;
+      }
+
+      // Render recent chips
+      if (this.recentChipsEl) {
+        this.recentChipsEl.innerHTML = '';
+        pairs.forEach((pair) => {
+          const chip = document.createElement('button');
+          chip.type = 'button';
+          chip.className = 'diff__recent-chip';
+          chip.title = `${pair.oldPath} ↔ ${pair.newPath}`;
+
+          const oldName = this._getFilename(pair.oldPath);
+          const newName = this._getFilename(pair.newPath);
+
+          chip.innerHTML = `
+            <span>${this._esc(oldName)}</span>
+            <span class="diff__recent-chip-arrow">↔</span>
+            <span>${this._esc(newName)}</span>
+          `;
+
+          chip.addEventListener('click', () => {
+            this.oldPath.value = pair.oldPath;
+            this.newPath.value = pair.newPath;
+          });
+
+          this.recentChipsEl.appendChild(chip);
+        });
+      }
+    } catch (err) {
+      console.warn('[Diff] Failed to load recent pairs:', err);
+    }
+  }
+
+  _saveRecentPair(oldPath, newPath) {
+    if (!oldPath || !newPath) return;
+    try {
+      const stored = localStorage.getItem('wafflematrix-recent-diff-pairs');
+      let pairs = stored ? JSON.parse(stored) : [];
+
+      // Filter out existing exact pair to avoid duplicates
+      pairs = pairs.filter(
+        (p) => !(p.oldPath === oldPath && p.newPath === newPath)
+      );
+
+      // Add to front
+      pairs.unshift({
+        oldPath,
+        newPath,
+        timestamp: new Date().toISOString(),
+      });
+
+      // Limit to max 5 pairs
+      if (pairs.length > 5) pairs.length = 5;
+
+      localStorage.setItem('wafflematrix-recent-diff-pairs', JSON.stringify(pairs));
+      this._loadRecentPairs(false);
+    } catch (err) {
+      console.warn('[Diff] Failed to save recent pair:', err);
+    }
+  }
+
+  _loadLastPair() {
+    try {
+      const stored = localStorage.getItem('wafflematrix-recent-diff-pairs');
+      const pairs = stored ? JSON.parse(stored) : [];
+      if (pairs && pairs[0]) {
+        this.oldPath.value = pairs[0].oldPath;
+        this.newPath.value = pairs[0].newPath;
+      }
+    } catch (err) {
+      console.warn('[Diff] Failed to load last pair:', err);
+    }
+  }
+
+  _getFilename(pathStr) {
+    if (!pathStr) return '';
+    const parts = pathStr.split(/[/\\]/);
+    return parts[parts.length - 1] || pathStr;
   }
 }

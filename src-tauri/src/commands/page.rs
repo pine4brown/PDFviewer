@@ -3,7 +3,6 @@
 use pdfium_render::prelude::*;
 use serde::{Deserialize, Serialize};
 use tauri::State;
-use base64::Engine;
 
 use crate::pdf::engine::{bind_pdfium, OutlineItem};
 use crate::pdf::renderer;
@@ -27,6 +26,15 @@ pub struct PageInfo {
 pub struct ThumbnailEntry {
     pub page_index: u16,
     pub image_data: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RenderPathPageResponse {
+    pub page_index: u16,
+    pub zoom: f32,
+    pub image_data: String,
+    pub width: f32,
+    pub height: f32,
 }
 
 /// Get the cached PDF bytes and optional password from state.
@@ -63,11 +71,6 @@ pub fn render_page(
         .map_err(|e| format!("Failed to open PDF for render: {e}"))?;
 
     let image_data = renderer::render_page(&document, page_index, zoom)?;
-    
-    // DEBUG: Write the base64 string to a file to verify what the backend is generating
-    if let Ok(bytes) = base64::prelude::BASE64_STANDARD.decode(&image_data) {
-        let _ = std::fs::write("/tmp/wafflematrix_debug.png", bytes);
-    }
     
     state.cache.lock().put(page_index, zoom, image_data.clone());
 
@@ -146,4 +149,30 @@ fn bookmark_to_item(bookmark: &PdfBookmark<'_>) -> OutlineItem {
         }
     }
     OutlineItem { title, page_index, children }
+}
+
+/// Render a page from a specific file path at the given zoom level.
+/// Returns base64 PNG data and page dimensions.
+#[tauri::command]
+pub fn render_page_from_path(
+    path: String,
+    page_index: u16,
+    zoom: f32,
+    state: State<'_, AppState>,
+) -> Result<RenderPathPageResponse, String> {
+    let pdfium = bind_pdfium(&state.pdfium_lib_path)?;
+    let document = pdfium
+        .load_pdf_from_file(&path, None)
+        .map_err(|e| format!("Failed to open PDF at {}: {}", path, e))?;
+
+    let image_data = renderer::render_page(&document, page_index, zoom)?;
+    let size = renderer::get_page_size(&document, page_index)?;
+
+    Ok(RenderPathPageResponse {
+        page_index,
+        zoom,
+        image_data,
+        width: size.width,
+        height: size.height,
+    })
 }

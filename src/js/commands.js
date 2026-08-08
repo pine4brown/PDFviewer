@@ -52,6 +52,17 @@ export async function renderPage(pageIndex, zoom) {
 }
 
 /**
+ * Render a page from a specific file path at the given zoom level.
+ * @param {string} filePath - Absolute path to the PDF file.
+ * @param {number} pageIndex - Zero-based page index.
+ * @param {number} zoom - Zoom multiplier (e.g. 1.0 = 100%).
+ * @returns {Promise<{page_index: number, zoom: number, image_data: string, width: number, height: number} | null>}
+ */
+export async function renderPageFromPath(filePath, pageIndex, zoom) {
+  return invoke('render_page_from_path', { path: filePath, pageIndex, zoom });
+}
+
+/**
  * Get info about a specific page (dimensions in points).
  * @param {number} pageIndex - Zero-based page index.
  * @returns {Promise<{page_index: number, width: number, height: number} | null>}

@@ -50,6 +50,7 @@ pub fn run() {
             commands::file::close_pdf,
             commands::file::open_file_dialog,
             commands::page::render_page,
+            commands::page::render_page_from_path,
             commands::page::get_page_info,
             commands::page::get_thumbnails,
             commands::page::get_outline,

@@ -5,6 +5,7 @@
 
 import { renderPage, getPageInfo, openPdf, closePdf } from './commands.js';
 import { t } from './i18n.js';
+import { showToast } from './toast.js';
 
 const ZOOM_MIN = 0.25;
 const ZOOM_MAX = 4.0;
@@ -80,7 +81,7 @@ export class PdfViewer {
       console.error('[Viewer] Error opening PDF:', err);
       this.showWelcome();
       this._emit('pdf:error', { error: err.message });
-      alert(`Failed to open PDF: ${err.message}`);
+      showToast(`Failed to open PDF: ${err.message}`, 'error');
     } finally {
       this.showLoading(false);
     }
@@ -217,13 +218,13 @@ export class PdfViewer {
       };
       img.onerror = (e) => {
         console.error('[Viewer] Failed to load image from base64 data', e);
-        alert('Failed to load the rendered image data onto the canvas.');
+        showToast('Failed to load the rendered image data onto the canvas.', 'error');
       };
       // Rust returns: { page_index, zoom, image_data (base64 PNG) }
       img.src = `data:image/png;base64,${result.image_data}`;
     } catch (err) {
       console.error('[Viewer] Render error:', err);
-      alert(`Render error: ${err.message || err}`);
+      showToast(`Render error: ${err.message || err}`, 'error');
     }
   }
 

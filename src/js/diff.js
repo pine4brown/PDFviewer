@@ -404,10 +404,11 @@ export class DiffPanel {
     // Build Page Select Dropdown for Visual Workspace
     if (this.pageSelect) {
       this.pageSelect.innerHTML = '';
-      pages.forEach((p, idx) => {
+      pages.forEach((p) => {
+        const changeCount = (p.entries || []).filter((e) => e.is_change !== false && e.kind !== 'unchanged').length;
         const opt = document.createElement('option');
         opt.value = String(p.page_index);
-        opt.textContent = t('diff.page', { page: p.page_index + 1 }) + (p.change_count() > 0 ? ` (${p.change_count()})` : '');
+        opt.textContent = t('diff.page', { page: p.page_index + 1 }) + (changeCount > 0 ? ` (${changeCount})` : '');
         this.pageSelect.appendChild(opt);
       });
     }
